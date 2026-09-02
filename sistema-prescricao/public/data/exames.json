@@ -1,0 +1,1084 @@
+{
+  "versao": "1.0.0",
+  "total": 154,
+  "exames": [
+    {
+      "id": "exame_0001",
+      "nome": "Hemograma completo",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0002",
+      "nome": "Contagem de reticulócitos",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0003",
+      "nome": "Velocidade de hemossedimentação (VHS)",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0004",
+      "nome": "Coagulograma (TP, TTPA, INR)",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0005",
+      "nome": "Fibrinogênio",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0006",
+      "nome": "Tipagem sanguínea (ABO e fator Rh)",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0007",
+      "nome": "Coombs direto",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0008",
+      "nome": "Coombs indireto",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0009",
+      "nome": "Eletroforese de hemoglobina",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0010",
+      "nome": "Ferritina",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0011",
+      "nome": "Ferro sérico",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0012",
+      "nome": "Capacidade total de ligação do ferro (TIBC)",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0013",
+      "nome": "Transferrina",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0014",
+      "nome": "Vitamina B12",
+      "categoria": "Hematologia",
+      "jejum": true,
+      "observacao": "Jejum de 8h recomendado"
+    },
+    {
+      "id": "exame_0015",
+      "nome": "Ácido fólico",
+      "categoria": "Hematologia",
+      "jejum": true,
+      "observacao": "Jejum de 8h recomendado"
+    },
+    {
+      "id": "exame_0016",
+      "nome": "Mielograma",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0017",
+      "nome": "D-dímero",
+      "categoria": "Hematologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0018",
+      "nome": "Glicemia de jejum",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": true,
+      "observacao": "Jejum de 8h"
+    },
+    {
+      "id": "exame_0019",
+      "nome": "Hemoglobina glicada (HbA1c)",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0020",
+      "nome": "Teste oral de tolerância à glicose (TOTG 75g)",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": true,
+      "observacao": "Jejum de 8h"
+    },
+    {
+      "id": "exame_0021",
+      "nome": "Insulina basal",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": true,
+      "observacao": "Jejum de 8h"
+    },
+    {
+      "id": "exame_0022",
+      "nome": "Colesterol total e frações (HDL, LDL, VLDL)",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": true,
+      "observacao": "Jejum de 12h"
+    },
+    {
+      "id": "exame_0023",
+      "nome": "Triglicerídeos",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": true,
+      "observacao": "Jejum de 12h"
+    },
+    {
+      "id": "exame_0024",
+      "nome": "Ácido úrico",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0025",
+      "nome": "Ureia",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0026",
+      "nome": "Creatinina",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0027",
+      "nome": "Taxa de filtração glomerular estimada (TFGe)",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0028",
+      "nome": "Sódio",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0029",
+      "nome": "Potássio",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0030",
+      "nome": "Cálcio total",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0031",
+      "nome": "Cálcio iônico",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0032",
+      "nome": "Magnésio",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0033",
+      "nome": "Fósforo",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0034",
+      "nome": "Proteínas totais e frações",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0035",
+      "nome": "Albumina",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0036",
+      "nome": "Bilirrubinas totais e frações",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0037",
+      "nome": "TGO (AST)",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0038",
+      "nome": "TGP (ALT)",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0039",
+      "nome": "Gama GT",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0040",
+      "nome": "Fosfatase alcalina",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0041",
+      "nome": "Amilase",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0042",
+      "nome": "Lipase",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0043",
+      "nome": "Desidrogenase láctica (LDH)",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0044",
+      "nome": "Creatinofosfoquinase (CPK)",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0045",
+      "nome": "CK-MB",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0046",
+      "nome": "Troponina",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0047",
+      "nome": "Proteína C reativa (PCR)",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0048",
+      "nome": "Proteína C reativa ultrassensível",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0049",
+      "nome": "Homocisteína",
+      "categoria": "Bioquímica / Metabólico",
+      "jejum": true,
+      "observacao": "Jejum de 8h"
+    },
+    {
+      "id": "exame_0050",
+      "nome": "TSH",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0051",
+      "nome": "T4 livre",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0052",
+      "nome": "T3 livre",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0053",
+      "nome": "Anti-TPO",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0054",
+      "nome": "Anti-tireoglobulina",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0055",
+      "nome": "Tireoglobulina",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0056",
+      "nome": "Cortisol basal",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": "Coleta pela manhã"
+    },
+    {
+      "id": "exame_0057",
+      "nome": "ACTH",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0058",
+      "nome": "Paratormônio (PTH)",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0059",
+      "nome": "Vitamina D (25-OH)",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0060",
+      "nome": "Prolactina",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": "Evitar estresse/exercício antes da coleta"
+    },
+    {
+      "id": "exame_0061",
+      "nome": "FSH",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0062",
+      "nome": "LH",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0063",
+      "nome": "Estradiol",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0064",
+      "nome": "Progesterona",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0065",
+      "nome": "Testosterona total",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0066",
+      "nome": "Testosterona livre",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0067",
+      "nome": "SHBG",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0068",
+      "nome": "Beta-hCG (gravidez)",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0069",
+      "nome": "Peptídeo C",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0070",
+      "nome": "Aldosterona",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0071",
+      "nome": "Renina",
+      "categoria": "Hormônios / Endócrino",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0072",
+      "nome": "Urina tipo I (EAS)",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": "Primeira urina da manhã, jato médio"
+    },
+    {
+      "id": "exame_0073",
+      "nome": "Urocultura com antibiograma",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": "Jato médio, higiene prévia"
+    },
+    {
+      "id": "exame_0074",
+      "nome": "Proteinúria de 24 horas",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": "Coleta de urina de 24h"
+    },
+    {
+      "id": "exame_0075",
+      "nome": "Microalbuminúria (relação albumina/creatinina)",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0076",
+      "nome": "Clearance de creatinina",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": "Coleta de urina de 24h"
+    },
+    {
+      "id": "exame_0077",
+      "nome": "Sódio urinário",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0078",
+      "nome": "Potássio urinário",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0079",
+      "nome": "Parasitológico de fezes (3 amostras)",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0080",
+      "nome": "Sangue oculto nas fezes",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0081",
+      "nome": "Coprocultura",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0082",
+      "nome": "Calprotectina fecal",
+      "categoria": "Urina / Fezes",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0083",
+      "nome": "HIV (Anti-HIV 1 e 2)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0084",
+      "nome": "VDRL / Sífilis",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0085",
+      "nome": "FTA-ABS",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0086",
+      "nome": "Hepatite A (Anti-HAV IgG/IgM)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0087",
+      "nome": "Hepatite B (HBsAg, Anti-HBs, Anti-HBc)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0088",
+      "nome": "Hepatite C (Anti-HCV)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0089",
+      "nome": "Toxoplasmose (IgG/IgM)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0090",
+      "nome": "Rubéola (IgG/IgM)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0091",
+      "nome": "Citomegalovírus (IgG/IgM)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0092",
+      "nome": "Dengue (NS1/IgG/IgM)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0093",
+      "nome": "Epstein-Barr vírus (EBV)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0094",
+      "nome": "Chagas (sorologia)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0095",
+      "nome": "COVID-19 (RT-PCR)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0096",
+      "nome": "COVID-19 (sorologia IgG/IgM)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0097",
+      "nome": "H. pylori (sorologia ou antígeno fecal)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0098",
+      "nome": "PPD (teste tuberculínico)",
+      "categoria": "Sorologia / Infecciosas",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0099",
+      "nome": "PSA total e livre",
+      "categoria": "Marcadores Tumorais",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0100",
+      "nome": "CA 125",
+      "categoria": "Marcadores Tumorais",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0101",
+      "nome": "CA 15-3",
+      "categoria": "Marcadores Tumorais",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0102",
+      "nome": "CA 19-9",
+      "categoria": "Marcadores Tumorais",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0103",
+      "nome": "CEA",
+      "categoria": "Marcadores Tumorais",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0104",
+      "nome": "Alfafetoproteína (AFP)",
+      "categoria": "Marcadores Tumorais",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0105",
+      "nome": "Eletrocardiograma (ECG)",
+      "categoria": "Cardiologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0106",
+      "nome": "Ecocardiograma transtorácico com Doppler",
+      "categoria": "Cardiologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0107",
+      "nome": "Teste ergométrico",
+      "categoria": "Cardiologia",
+      "jejum": false,
+      "observacao": "Uso de roupa e calçado apropriados para esforço"
+    },
+    {
+      "id": "exame_0108",
+      "nome": "Holter 24 horas",
+      "categoria": "Cardiologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0109",
+      "nome": "MAPA 24 horas",
+      "categoria": "Cardiologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0110",
+      "nome": "Cintilografia miocárdica",
+      "categoria": "Cardiologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0111",
+      "nome": "Angiotomografia de coronárias",
+      "categoria": "Cardiologia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0112",
+      "nome": "Radiografia de tórax (PA e perfil)",
+      "categoria": "Imagem — Radiografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0113",
+      "nome": "Radiografia de coluna cervical",
+      "categoria": "Imagem — Radiografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0114",
+      "nome": "Radiografia de coluna lombossacra",
+      "categoria": "Imagem — Radiografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0115",
+      "nome": "Radiografia de bacia",
+      "categoria": "Imagem — Radiografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0116",
+      "nome": "Radiografia de joelho",
+      "categoria": "Imagem — Radiografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0117",
+      "nome": "Radiografia de mãos e punhos",
+      "categoria": "Imagem — Radiografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0118",
+      "nome": "Radiografia de seios da face",
+      "categoria": "Imagem — Radiografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0119",
+      "nome": "Radiografia panorâmica de mandíbula",
+      "categoria": "Imagem — Radiografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0120",
+      "nome": "Ultrassonografia de abdome total",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": true,
+      "observacao": "Jejum de 6h"
+    },
+    {
+      "id": "exame_0121",
+      "nome": "Ultrassonografia de abdome superior",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": true,
+      "observacao": "Jejum de 6h"
+    },
+    {
+      "id": "exame_0122",
+      "nome": "Ultrassonografia pélvica (via abdominal)",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": "Bexiga cheia"
+    },
+    {
+      "id": "exame_0123",
+      "nome": "Ultrassonografia transvaginal",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0124",
+      "nome": "Ultrassonografia obstétrica",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0125",
+      "nome": "Ultrassonografia de tireoide",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0126",
+      "nome": "Ultrassonografia de próstata (via abdominal)",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": "Bexiga cheia"
+    },
+    {
+      "id": "exame_0127",
+      "nome": "Ultrassonografia de próstata (via transretal)",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0128",
+      "nome": "Ultrassonografia de rins e vias urinárias",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0129",
+      "nome": "Ultrassonografia de mamas",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0130",
+      "nome": "Ultrassonografia Doppler de carótidas e vertebrais",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0131",
+      "nome": "Ultrassonografia Doppler de membros inferiores (arterial)",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0132",
+      "nome": "Ultrassonografia Doppler de membros inferiores (venoso)",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0133",
+      "nome": "Ultrassonografia musculoesquelética (articulação a especificar)",
+      "categoria": "Imagem — Ultrassonografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0134",
+      "nome": "Tomografia computadorizada de crânio",
+      "categoria": "Imagem — Tomografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0135",
+      "nome": "Tomografia computadorizada de tórax",
+      "categoria": "Imagem — Tomografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0136",
+      "nome": "Tomografia computadorizada de abdome total",
+      "categoria": "Imagem — Tomografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0137",
+      "nome": "Tomografia computadorizada de coluna lombar",
+      "categoria": "Imagem — Tomografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0138",
+      "nome": "Tomografia computadorizada de seios da face",
+      "categoria": "Imagem — Tomografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0139",
+      "nome": "Angiotomografia de crânio",
+      "categoria": "Imagem — Tomografia",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0140",
+      "nome": "Ressonância magnética de crânio",
+      "categoria": "Imagem — Ressonância",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0141",
+      "nome": "Ressonância magnética de coluna cervical",
+      "categoria": "Imagem — Ressonância",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0142",
+      "nome": "Ressonância magnética de coluna lombar",
+      "categoria": "Imagem — Ressonância",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0143",
+      "nome": "Ressonância magnética de joelho",
+      "categoria": "Imagem — Ressonância",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0144",
+      "nome": "Ressonância magnética de abdome total",
+      "categoria": "Imagem — Ressonância",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0145",
+      "nome": "Ressonância magnética de pelve",
+      "categoria": "Imagem — Ressonância",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0146",
+      "nome": "Mamografia bilateral",
+      "categoria": "Imagem — Outros",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0147",
+      "nome": "Densitometria óssea",
+      "categoria": "Imagem — Outros",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0148",
+      "nome": "Endoscopia digestiva alta",
+      "categoria": "Endoscopia / Função",
+      "jejum": true,
+      "observacao": "Jejum de 8h"
+    },
+    {
+      "id": "exame_0149",
+      "nome": "Colonoscopia",
+      "categoria": "Endoscopia / Função",
+      "jejum": true,
+      "observacao": "Preparo intestinal conforme orientação"
+    },
+    {
+      "id": "exame_0150",
+      "nome": "Espirometria",
+      "categoria": "Endoscopia / Função",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0151",
+      "nome": "Polissonografia",
+      "categoria": "Endoscopia / Função",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0152",
+      "nome": "Eletroencefalograma (EEG)",
+      "categoria": "Endoscopia / Função",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0153",
+      "nome": "Audiometria tonal",
+      "categoria": "Endoscopia / Função",
+      "jejum": false,
+      "observacao": null
+    },
+    {
+      "id": "exame_0154",
+      "nome": "Impedanciometria",
+      "categoria": "Endoscopia / Função",
+      "jejum": false,
+      "observacao": null
+    }
+  ]
+}
