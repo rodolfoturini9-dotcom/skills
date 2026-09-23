@@ -39,6 +39,18 @@ def build(target: Path = ROOT/'dist'/'copiloto_clinico.html') -> Path:
     return target
 
 
+def build_isls(target: Path) -> Path:
+    """Gera js/copiloto-kb.js para o Sistema ISLS (window.COPILOTO_KB)."""
+    data=json.dumps(knowledge(),ensure_ascii=False,separators=(',',':'))
+    target.parent.mkdir(parents=True,exist_ok=True)
+    target.write_text('/* Gerado por copiloto-clinico/scripts/build_standalone.py --isls; não editar à mão. */\n'
+                      f'window.COPILOTO_KB={data};\n',encoding='utf-8')
+    return target
+
+
 if __name__=='__main__':
-    out=build()
-    print(json.dumps({'arquivo':str(out.relative_to(ROOT)),'bytes':out.stat().st_size},ensure_ascii=False))
+    if len(sys.argv)==3 and sys.argv[1]=='--isls':
+        out=build_isls(Path(sys.argv[2]).resolve())
+    else:
+        out=build()
+    print(json.dumps({'arquivo':str(out),'bytes':out.stat().st_size},ensure_ascii=False))
