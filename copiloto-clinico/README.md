@@ -16,7 +16,7 @@ Copiloto em português com 14 especialistas, cada um definido por um `SKILL.md` 
 
 1. Abra `dist/copiloto_clinico.html`.
 2. Em **Configurações**, cole a chave criada em https://console.anthropic.com/ (API Keys) e clique em **Testar chave**.
-3. Marque **Lembrar neste navegador** somente em dispositivo pessoal. Sem essa opção, a chave fica apenas na memória da aba.
+3. Opcional: marque **Salvar neste dispositivo**, crie uma senha (mínimo 8 caracteres) e clique em **Salvar protegida**. A chave é gravada criptografada (PBKDF2-SHA-256 com 310.000 iterações e AES-GCM de 256 bits). A senha não é gravada. Ao reabrir o arquivo, digite a senha em **Desbloquear**. Após 30 minutos sem uso, o copiloto bloqueia sozinho. **Bloquear** tira a chave da memória na hora, e **Apagar chave** remove a cópia salva do dispositivo. Sem essa opção, a chave fica só na memória da aba e some quando a aba é fechada.
 
 Após alterar `knowledge/` ou `web/index.html`, regenere o arquivo com `python scripts/build_standalone.py`.
 

@@ -88,8 +88,10 @@ main{padding:18px 16px}.composer{position:static}.top{display:block}.status{disp
           <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="Cole aqui a chave criada no Console" style="flex:1">
           <button id="toggleKey" class="btn" type="button">Mostrar</button>
         </div>
-        <label class="check"><input id="rememberKey" type="checkbox"> Lembrar neste navegador (salva a chave neste dispositivo; não use em computador compartilhado)</label>
-        <div class="row"><button id="checkKey" class="btn" type="button">Testar chave</button><button id="clearKey" class="btn" type="button">Apagar chave</button><span id="keyResult" class="hint"></span></div>
+        <div id="unlockBox" class="row" hidden><input id="unlockPw" type="password" autocomplete="current-password" placeholder="Senha do copiloto" style="flex:1"><button id="unlock" class="btn" type="button">Desbloquear</button></div>
+        <label class="check"><input id="rememberKey" type="checkbox"> Salvar neste dispositivo, criptografada com uma senha sua (bloqueia após 30 min sem uso)</label>
+        <div id="saveBox" class="row" hidden><input id="newPw" type="password" autocomplete="new-password" placeholder="Crie uma senha (mín. 8 caracteres)" style="flex:1"><button id="saveKey" class="btn" type="button">Salvar protegida</button></div>
+        <div class="row"><button id="checkKey" class="btn" type="button">Testar chave</button><button id="lockKey" class="btn" type="button">Bloquear</button><button id="clearKey" class="btn" type="button">Apagar chave</button><span id="keyResult" class="hint"></span></div>
       </div>
       <div class="field">
         <label for="model">Modelo</label>
@@ -141,15 +143,16 @@ const $=id=>document.getElementById(id);
 const KB=JSON.parse($('kb').textContent);
 const DIRECT=!!KB;
 const SDK_URL='https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.128.0/+esm';
-const STORE='copiloto.settings.v3', KEYSTORE='copiloto.apikey.v3';
+const STORE='copiloto.settings.v3', ENC='copiloto.apikey.enc.v1', LEGACY='copiloto.apikey.v3', IDLE_MS=30*60*1000;
 let selected='auto', file=null, previousModule=null, history=[], accessToken='', previousPatientId='', models=[], defaultModel='claude-opus-5';
 
 // ---------- armazenamento local (tolerante a bloqueio) ----------
 const ls={get(k){try{return localStorage.getItem(k)}catch{return null}},set(k,v){try{localStorage.setItem(k,v)}catch{}},del(k){try{localStorage.removeItem(k)}catch{}}};
 function loadSettings(){
   let s={};try{s=JSON.parse(ls.get(STORE)||'{}')}catch{}
-  const key=ls.get(KEYSTORE);
-  if(key){$('apiKey').value=key;$('rememberKey').checked=true}
+  const legacy=ls.get(LEGACY);if(legacy){$('apiKey').value=legacy;ls.del(LEGACY)} // chave em texto puro de versão anterior: usa nesta sessão e remove
+  if(!(window.crypto&&crypto.subtle)){$('rememberKey').disabled=true;$('rememberKey').parentElement.title='Criptografia indisponível neste navegador'}
+  if(ls.get(ENC)){$('rememberKey').checked=true;if(!$('apiKey').value)$('unlockBox').hidden=false}
   if(s.effort)$('effort').value=s.effort;
   if(typeof s.web==='boolean')$('webSearch').checked=s.web;
   if(typeof s.normals==='boolean')$('normalPatterns').checked=s.normals;
@@ -157,7 +160,6 @@ function loadSettings(){
 }
 function saveSettings(){
   ls.set(STORE,JSON.stringify({model:$('model').value,effort:$('effort').value,web:$('webSearch').checked,normals:$('normalPatterns').checked}));
-  if($('rememberKey').checked&&key())ls.set(KEYSTORE,key());else ls.del(KEYSTORE);
   $('normalBanner').hidden=!$('normalPatterns').checked;
 }
 const key=()=>$('apiKey').value.trim();
@@ -296,14 +298,14 @@ function fillModules(items){
   for(const m of [{key:'auto',title:'Automático'},...items]){const b=node('button','',m.title);b.type='button';b.dataset.key=m.key;b.onclick=()=>choose(m.key);$('modules').append(b)}
   choose('auto');
 }
-function refreshStatus(extra){const ok=!!key()||extra;setStatus(ok?'Chave configurada'+(DIRECT?' · arquivo único':' · servidor local'):'Informe a chave da API Claude',ok);if(!ok)$('settings').open=true}
+function refreshStatus(extra){const ok=!!key()||extra;setStatus(ok?'Chave configurada'+(DIRECT?' · arquivo único':' · servidor local'):(ls.get(ENC)?'Bloqueado · informe a senha':'Informe a chave da API Claude'),ok);if(!ok)$('settings').open=true}
 async function init(){
   const saved=loadSettings();$('normalBanner').hidden=!$('normalPatterns').checked;
   if(DIRECT){
     for(const c of KB.chunks)c.terms=terms(c.text);
     fillModules(KB.modules);fillModels(Object.entries(KB.models).map(([id,v])=>({id,label:v.label})),KB.default_model,saved.model);
     $('fhirBox').hidden=true;
-    $('modeHint').textContent='Modo arquivo único: a conversa vai direto do navegador para a API da Anthropic. A chave fica apenas neste dispositivo (memória ou armazenamento local, se marcado). Requer internet.';
+    $('modeHint').textContent='Modo arquivo único: a conversa vai direto do navegador para a API da Anthropic. A chave fica apenas neste dispositivo: na memória da aba ou, se marcado, criptografada (AES-GCM) com a sua senha. Requer internet.';
     refreshStatus(false);return;
   }
   const h=await api('/api/health');
@@ -314,10 +316,38 @@ async function init(){
 }
 init().catch(e=>setStatus(e.message||'Servidor indisponível',false));
 
-for(const id of ['model','effort','webSearch','normalPatterns','rememberKey'])$(id).onchange=saveSettings;
-$('apiKey').oninput=()=>{saveSettings();refreshStatus(false);$('keyResult').textContent=''};
+for(const id of ['model','effort','webSearch','normalPatterns'])$(id).onchange=saveSettings;
+
+// ---------- chave protegida por senha (PBKDF2 + AES-GCM; a senha nunca é gravada) ----------
+const te=new TextEncoder(),td=new TextDecoder();
+const b64=u=>btoa(String.fromCharCode(...new Uint8Array(u))),unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function derive(pw,salt){const base=await crypto.subtle.importKey('raw',te.encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function sealKey(k,pw){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await derive(pw,salt),te.encode(k));return JSON.stringify({v:1,salt:b64(salt),iv:b64(iv),ct:b64(ct)})}
+async function openKey(blob,pw){const o=JSON.parse(blob);return td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(o.iv)},await derive(pw,unb64(o.salt)),unb64(o.ct)))}
+const say=t=>$('keyResult').textContent=t;
+function lock(message){$('apiKey').value='';$('apiKey').type='password';clientCache=null;$('unlockBox').hidden=!ls.get(ENC);refreshStatus(false);say(message||'')}
+$('apiKey').oninput=()=>{refreshStatus(false);say('');if($('rememberKey').checked&&key())$('saveBox').hidden=false};
+$('rememberKey').onchange=()=>{
+  if($('rememberKey').checked){$('saveBox').hidden=false;$('newPw').focus();say(key()?'':'Cole a chave acima e crie a senha.')}
+  else{if(ls.get(ENC)&&!confirm('Remover a chave salva neste dispositivo?')){$('rememberKey').checked=true;return}ls.del(ENC);$('saveBox').hidden=true;$('unlockBox').hidden=true;refreshStatus(false);say('Chave salva removida deste dispositivo.')}
+};
+$('saveKey').onclick=async()=>{
+  const pw=$('newPw').value;if(!key())return say('Cole a chave antes de salvar.');if(pw.length<8)return say('A senha precisa ter ao menos 8 caracteres.');
+  try{ls.set(ENC,await sealKey(key(),pw));$('newPw').value='';$('saveBox').hidden=true;say(ls.get(ENC)?'Chave salva criptografada. Ao reabrir, informe a senha.':'Este navegador bloqueou o armazenamento local.')}catch{say('Falha ao criptografar a chave.')}
+};
+async function unlock(){
+  const blob=ls.get(ENC);if(!blob)return;try{$('apiKey').value=await openKey(blob,$('unlockPw').value);$('unlockPw').value='';$('unlockBox').hidden=true;touch();refreshStatus(false);say('Desbloqueado.')}
+  catch{$('unlockPw').value='';say('Senha incorreta.')}
+}
+$('unlock').onclick=unlock;$('unlockPw').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();unlock()}};
+$('lockKey').onclick=()=>lock(ls.get(ENC)?'Bloqueado. Informe a senha para usar.':'Chave removida da memória (não estava salva).');
+let lastUse=Date.now();const touch=()=>lastUse=Date.now();
+for(const ev of ['keydown','pointerdown'])document.addEventListener(ev,touch,{passive:true});
+setInterval(()=>{if(key()&&ls.get(ENC)&&Date.now()-lastUse>IDLE_MS)lock('Bloqueado por inatividade.')},30000);
 $('toggleKey').onclick=()=>{const i=$('apiKey');i.type=i.type==='password'?'text':'password';$('toggleKey').textContent=i.type==='password'?'Mostrar':'Ocultar'};
-$('clearKey').onclick=()=>{$('apiKey').value='';$('rememberKey').checked=false;ls.del(KEYSTORE);clientCache=null;refreshStatus(false);$('keyResult').textContent='Chave apagada.'};
+$('clearKey').onclick=()=>{if(ls.get(ENC)&&!confirm('Apagar a chave da memória e do dispositivo?'))return;ls.del(ENC);ls.del(LEGACY);$('rememberKey').checked=false;$('saveBox').hidden=true;lock('Chave apagada deste dispositivo.')};
 $('checkKey').onclick=async()=>{
   const out=$('keyResult');out.textContent='Testando…';
   try{
