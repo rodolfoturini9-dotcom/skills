@@ -23,7 +23,9 @@ def route(text: str, requested: str = 'auto') -> Route:
     explicit = re.search(r'(?:^|\s)[@/]([a-z]+)\b', t)
     if explicit and explicit.group(1) in REGISTRY:
         return Route(explicit.group(1), 'comando explícito')
-    pediatric = bool(re.search(r'\b(pediatr|crianca|lactente|recem.nascid|neonat|infantil|menino|menina|adolescente|[0-9]+\s*(?:meses|anos))', t))
+    ages = [int(x) for x in re.findall(r'\b([0-9]{1,3})\s*anos?\b', t)]
+    pediatric = bool(re.search(r'\b(pediatr|crianca|lactente|recem.nascid|neonat|infantil|menino|menina|adolescente|[0-9]+\s*(?:meses|dias de vida))', t)) \
+        or any(age < 18 for age in ages)
     hospital = bool(re.search(r'\b(hospital|internad|enfermaria|prescricao hospitalar|uti|leito)', t))
     if re.search(r'\b(ecg|eletrocardiograma|eletrocardiograf)', t):
         return Route('ecg','ECG identificado')

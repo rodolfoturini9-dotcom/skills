@@ -1,15 +1,364 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Copiloto Clínico</title><style>
-:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#173047;background:#f3f7f8}*{box-sizing:border-box}body{margin:0}.shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}aside{background:#10394b;color:#e4f4f4;padding:30px 20px}aside h1{font-size:21px;margin:0 0 6px}.sub{font-size:13px;opacity:.8;line-height:1.55}.tag{margin:32px 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;opacity:.65}#modules{display:grid;gap:7px}#modules button{background:none;border:1px solid #ffffff24;color:inherit;text-align:left;padding:10px 12px;border-radius:9px;cursor:pointer}#modules button.active,#modules button:hover{background:#2f7180}main{max-width:1050px;width:100%;margin:auto;padding:30px 40px;display:flex;flex-direction:column;min-height:100vh}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.top h2{font-size:27px;letter-spacing:-.04em;margin:0 0 8px}.top p{color:#637788;line-height:1.5;margin:0}.status{font-size:12px;border-radius:20px;padding:8px 12px;background:#deece8;color:#276451;white-space:nowrap}.status.off{background:#f7e9dd;color:#965528}.intro{border:1px solid #d7e5e9;background:white;border-radius:16px;padding:23px;margin:30px 0;color:#506676;line-height:1.6}.intro strong{color:#21495a}.messages{flex:1;display:grid;align-content:start;gap:14px;padding:8px 0 20px}.bubble{border-radius:16px;padding:16px 20px;max-width:90%;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}.bubble.user{justify-self:end;background:#d6ecea}.bubble.assistant{justify-self:start;background:white;border:1px solid #d7e5e9}.meta{font-size:12px;color:#66818c;margin-bottom:7px}.sources{margin-top:15px;border-top:1px solid #e3ebed;padding-top:12px;font-size:12px;color:#667d88}.sources details{margin:7px 0}.sources summary{cursor:pointer;overflow-wrap:anywhere}.sources p{white-space:pre-wrap;margin:6px 0 0}.composer{background:white;border:1px solid #d6e4e8;border-radius:17px;padding:14px;position:sticky;bottom:15px;box-shadow:0 8px 28px #17304712}.clinical{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0 16px;font-size:12px;color:#506878}.clinical input[type=text]{border:1px solid #d6e4e8;border-radius:7px;padding:8px;width:185px}.clinical label{display:flex;gap:5px;align-items:center}.composer textarea{width:100%;border:0;resize:vertical;min-height:90px;max-height:300px;font:inherit;color:#173047;outline:0}.actions{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.actions label{font-size:13px;color:#506878;cursor:pointer}.actions button{background:#146d78;color:white;border:0;padding:11px 18px;border-radius:9px;font-weight:650;cursor:pointer}.actions button:disabled{opacity:.5;cursor:wait}#attachment{font-size:12px;color:#577086}.note{font-size:11px;color:#6b8089;margin:10px 2px 0}@media(max-width:800px){.shell{display:block}aside{padding:18px}aside .sub,aside .tag{display:none}#modules{display:flex;overflow-x:auto;margin-top:12px}#modules button{white-space:nowrap}main{padding:22px 14px}.top{display:block}.status{display:inline-block;margin-top:12px}.bubble{max-width:100%}}</style></head>
-<body><div class="shell"><aside><h1>✚ Copiloto Clínico</h1><div class="sub">Assistente local para documentação e apoio ao raciocínio profissional.</div><div class="tag">Especialista</div><div id="modules"></div></aside><main><header class="top"><div><h2>Como posso ajudar no atendimento?</h2><p>Descreva o caso, solicite um documento ou envie uma imagem de ECG. O roteador escolhe um especialista.</p><button id="newChat" type="button" style="margin-top:12px;background:#e1f0ef;border:0;border-radius:7px;padding:8px 12px;color:#14505a;cursor:pointer">Nova conversa</button></div><span id="status" class="status">Verificando…</span></header><section id="intro" class="intro"><strong>Exemplos</strong><br>“Faça admissão pediátrica com os dados abaixo…”<br>“Interprete este ECG considerando o contexto clínico…”<br>“Estruture uma passagem de plantão para este paciente…”</section><section id="messages" class="messages" aria-live="polite"></section><form id="form" class="composer"><textarea id="message" required minlength="3" maxlength="20000" placeholder="Digite os dados clínicos disponíveis e sua solicitação…"></textarea><div class="clinical"><label><input id="useFhir" type="checkbox"> Consultar prescrições FHIR</label><input id="patientId" type="text" maxlength="64" placeholder="ID técnico do paciente"><label><input id="confirmId" type="checkbox"> Confirmei o ID do paciente</label></div><div class="actions"><label>📎 Anexar PNG, JPEG ou PDF (até 8 MB)<input id="file" type="file" accept="image/png,image/jpeg,application/pdf" hidden></label><span id="attachment"></span><button id="send" type="submit">Enviar →</button></div></form><p class="note">Revisão e assinatura por profissional responsável. Não armazene dados identificáveis em um servidor público sem infraestrutura apropriada.</p></main></div>
-<script>
-let selected='auto', file=null, previousModule=null, history=[], accessToken='', previousPatientId='';const modules=document.getElementById('modules'), messages=document.getElementById('messages');
-function node(tag,cls,txt){const e=document.createElement(tag);e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
-function item(who,body,route,sources){document.getElementById('intro').hidden=true;const box=node('article','bubble '+who);if(route)box.append(node('div','meta',route));box.append(node('div','',body));if(who==='assistant'&&route){const copy=node('button','', 'Copiar rascunho');copy.type='button';copy.style.cssText='margin-top:12px;background:#e1f0ef;border:0;border-radius:7px;padding:7px 10px;cursor:pointer;color:#14505a';copy.onclick=()=>navigator.clipboard.writeText(body);box.append(copy)}if(sources?.length){const group=node('div','sources','Referências recuperadas');for(const s of sources){const d=document.createElement('details'),sum=document.createElement('summary');sum.textContent=s.source+' · posição '+s.offset;d.append(sum,node('p','',s.excerpt));group.append(d)}box.append(group)}messages.append(box);box.scrollIntoView({behavior:'smooth',block:'end'})}
-function choose(key){selected=key;for(const b of modules.children)b.classList.toggle('active',b.dataset.key===key)}
-async function loadModules(){const r=await fetch('/api/modules',{headers:{'X-Copilot-Token':accessToken}});if(!r.ok)throw Error('Módulos indisponíveis');const items=await r.json();for(const m of [{key:'auto',title:'Automático'},...items]){const b=node('button','',m.title);b.type='button';b.dataset.key=m.key;b.onclick=()=>choose(m.key);modules.append(b)}choose('auto')}
-async function checkHealth(){let r=await fetch('/api/health',{headers:{'X-Copilot-Token':accessToken}});if(r.status===401){accessToken=prompt('Token de acesso ao copiloto:')||'';r=await fetch('/api/health',{headers:{'X-Copilot-Token':accessToken}})}if(!r.ok)throw Error('Sem acesso');const s=await r.json();const e=document.getElementById('status');e.textContent=s.ready?'Modelo configurado · '+s.specialists+' especialistas':'Configure OPENAI_API_KEY';e.classList.toggle('off',!s.ready);await loadModules()}checkHealth().catch(()=>document.getElementById('status').textContent='Acesso não autorizado ou servidor indisponível');
-document.getElementById('newChat').onclick=()=>{history=[];previousModule=null;previousPatientId='';messages.replaceChildren();document.getElementById('intro').hidden=false;document.getElementById('patientId').value='';document.getElementById('confirmId').checked=false;document.getElementById('useFhir').checked=false;choose('auto')};
-document.getElementById('file').onchange=e=>{file=e.target.files[0]||null;document.getElementById('attachment').textContent=file?file.name:''};
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Copiloto Clínico</title>
+<style>
+:root{--ink:#173047;--muted:#5d7383;--bg:#f3f7f8;--card:#fff;--line:#d7e5e9;--side:#10394b;--side-ink:#e4f4f4;--accent:#146d78;--accent-soft:#e1f0ef;--accent-ink:#14505a;--user:#d6ecea;--ok-bg:#deece8;--ok:#276451;--warn-bg:#f7e9dd;--warn:#8a4b1f;--code:#f4f8f9;
+font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:var(--bg)}
+@media (prefers-color-scheme:dark){:root{--ink:#dce8ee;--muted:#9db2bf;--bg:#0f1b22;--card:#15252e;--line:#26404c;--side:#0a2733;--side-ink:#d8eef0;--accent:#2a8f9b;--accent-soft:#1c3a40;--accent-ink:#bfe6ea;--user:#1d3f45;--ok-bg:#183a30;--ok:#8fd4b6;--warn-bg:#3d2a17;--warn:#f0bf8e;--code:#10202a}}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}
+.shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+aside{background:var(--side);color:var(--side-ink);padding:28px 18px}
+aside h1{font-size:21px;margin:0 0 6px}.sub{font-size:13px;opacity:.8;line-height:1.55}
+.tag{margin:28px 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;opacity:.65}
+#modules{display:grid;gap:7px}
+#modules button{background:none;border:1px solid #ffffff24;color:inherit;text-align:left;padding:9px 12px;border-radius:9px;cursor:pointer}
+#modules button.active,#modules button:hover{background:#2f7180}
+main{max-width:1050px;width:100%;margin:auto;padding:26px 36px;display:flex;flex-direction:column;min-height:100vh}
+.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+.top h2{font-size:26px;letter-spacing:-.03em;margin:0 0 8px}.top p{color:var(--muted);line-height:1.5;margin:0}
+.status{font-size:12px;border-radius:20px;padding:8px 12px;background:var(--ok-bg);color:var(--ok);white-space:nowrap}
+.status.off{background:var(--warn-bg);color:var(--warn)}
+.btn{background:var(--accent-soft);border:0;border-radius:7px;padding:8px 12px;color:var(--accent-ink);cursor:pointer}
+.btn.primary{background:var(--accent);color:#fff;font-weight:650;padding:11px 18px;border-radius:9px}
+.btn:disabled{opacity:.5;cursor:wait}
+.settings{border:1px solid var(--line);background:var(--card);border-radius:14px;margin:18px 0 0;padding:4px 18px}
+.settings summary{cursor:pointer;padding:12px 0;font-weight:650}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;padding:4px 0 16px}
+.field{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+.field input[type=password],.field input[type=text],.field select{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px;width:100%}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.check{display:flex;gap:7px;align-items:flex-start;font-size:13px;color:var(--muted);line-height:1.4}
+.hint{font-size:12px;color:var(--muted);line-height:1.45;margin:0}
+.banner{border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.45;background:var(--warn-bg);color:var(--warn);margin-top:12px}
+.intro{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:22px;margin:22px 0;color:var(--muted);line-height:1.6}
+.intro strong{color:var(--ink)}
+.messages{flex:1;display:grid;align-content:start;gap:14px;padding:8px 0 20px}
+.bubble{border-radius:16px;padding:16px 20px;max-width:92%;line-height:1.6;overflow-wrap:anywhere}
+.bubble.user{justify-self:end;background:var(--user);white-space:pre-wrap}
+.bubble.assistant{justify-self:start;background:var(--card);border:1px solid var(--line);width:100%}
+.bubble .txt{white-space:pre-wrap;margin:0 0 8px}
+.bubble pre{white-space:pre-wrap;background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px;margin:8px 0;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.notice{font-size:12px;color:var(--warn);margin:6px 0}
+.sources{margin-top:14px;border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--muted)}
+.sources details{margin:6px 0}.sources summary{cursor:pointer;overflow-wrap:anywhere}.sources p{white-space:pre-wrap;margin:6px 0 0}
+.sources a{color:var(--accent-ink)}
+.composer{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:14px;position:sticky;bottom:12px;box-shadow:0 8px 28px #17304714}
+.composer textarea{width:100%;border:0;background:transparent;resize:vertical;min-height:90px;max-height:320px;outline:0}
+.clinical{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0 14px;font-size:12px;color:var(--muted)}
+.clinical input[type=text]{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:8px;width:185px}
+.clinical label{display:flex;gap:5px;align-items:center}
+.actions{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.actions label{font-size:13px;color:var(--muted);cursor:pointer}
+#attachment{font-size:12px;color:var(--muted)}
+.note{font-size:11px;color:var(--muted);margin:10px 2px 0}
+@media(max-width:800px){.shell{display:block}aside{padding:16px}aside .sub,aside .tag{display:none}
+#modules{display:flex;overflow-x:auto;margin-top:12px}#modules button{white-space:nowrap}
+main{padding:18px 16px}.composer{position:static}.top{display:block}.status{display:inline-block;margin-top:12px}.bubble{max-width:100%}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside>
+  <h1>✚ Copiloto Clínico</h1>
+  <div class="sub">Especialistas Claude para documentação e apoio ao raciocínio profissional.</div>
+  <div class="tag">Especialista</div>
+  <div id="modules"></div>
+</aside>
+<main>
+  <header class="top">
+    <div>
+      <h2>Como posso ajudar no atendimento?</h2>
+      <p>Descreva o caso, solicite um documento ou envie imagem/PDF. O roteador escolhe o especialista, ou selecione um ao lado.</p>
+      <button id="newChat" class="btn" type="button" style="margin-top:12px">Nova conversa</button>
+    </div>
+    <span id="status" class="status off">Verificando…</span>
+  </header>
+
+  <details id="settings" class="settings">
+    <summary>Configurações · chave da API Claude</summary>
+    <div class="grid">
+      <div class="field">
+        <label for="apiKey">Chave da API Claude (sk-ant-…)</label>
+        <div class="row">
+          <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="Cole aqui a chave criada no Console" style="flex:1">
+          <button id="toggleKey" class="btn" type="button">Mostrar</button>
+        </div>
+        <label class="check"><input id="rememberKey" type="checkbox"> Lembrar neste navegador (salva a chave neste dispositivo; não use em computador compartilhado)</label>
+        <div class="row"><button id="checkKey" class="btn" type="button">Testar chave</button><button id="clearKey" class="btn" type="button">Apagar chave</button><span id="keyResult" class="hint"></span></div>
+      </div>
+      <div class="field">
+        <label for="model">Modelo</label>
+        <select id="model"></select>
+        <label for="effort">Esforço de raciocínio</label>
+        <select id="effort">
+          <option value="low">Baixo (mais rápido)</option>
+          <option value="medium">Médio</option>
+          <option value="high" selected>Alto (recomendado)</option>
+          <option value="xhigh">Muito alto</option>
+          <option value="max">Máximo (mais lento e caro)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="check"><input id="webSearch" type="checkbox" checked> Busca web para verificar diretrizes e doses atuais (cobrada por busca; exige busca web habilitada na organização do Console)</label>
+        <label class="check"><input id="normalPatterns" type="checkbox"> Aplicar padrões de normalidade dos SKILL.md (exame físico e “Nega…” em APP/MUCs/alergias quando não informados)</label>
+        <p class="hint">Desligado: nada é completado; itens sem dado são omitidos ou marcados “[não informado]”.</p>
+      </div>
+    </div>
+    <p class="hint" id="modeHint" style="padding-bottom:14px"></p>
+  </details>
+
+  <div id="normalBanner" class="banner" hidden>Padrões de normalidade ativos: exame físico e antecedentes não informados podem sair com texto-padrão. Confira cada item antes de assinar.</div>
+
+  <section id="intro" class="intro"><strong>Exemplos</strong><br>“Faça admissão pediátrica com os dados abaixo…”<br>“Interprete este ECG considerando o contexto clínico…”<br>“Estruture uma passagem de plantão para este paciente…”<br>Atalho: Ctrl+Enter envia. Comandos: @ecg, @admissao, @uti, @regulacao…</section>
+  <section id="messages" class="messages" aria-live="polite"></section>
+
+  <form id="form" class="composer">
+    <textarea id="message" required minlength="3" maxlength="20000" placeholder="Digite os dados clínicos disponíveis e sua solicitação…"></textarea>
+    <div class="clinical" id="fhirBox">
+      <label><input id="useFhir" type="checkbox"> Consultar prescrições FHIR</label>
+      <input id="patientId" type="text" maxlength="64" placeholder="ID técnico do paciente">
+      <label><input id="confirmId" type="checkbox"> Confirmei o ID do paciente</label>
+    </div>
+    <div class="actions">
+      <label>📎 Anexar PNG, JPEG, WEBP ou PDF (até 8 MB)<input id="file" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" hidden></label>
+      <span id="attachment"></span>
+      <button id="send" class="btn primary" type="submit">Enviar →</button>
+    </div>
+  </form>
+  <p class="note">Rascunho para revisão e assinatura do profissional responsável. Os dados enviados são processados pela API da Anthropic; não use em servidor público sem infraestrutura, contrato e adequação à LGPD.</p>
+</main>
+</div>
+
+<!-- Preenchido por scripts/build_standalone.py na versão de arquivo único; null = modo servidor. -->
+<script id="kb" type="application/json">null</script>
+<script type="module">
+const $=id=>document.getElementById(id);
+const KB=JSON.parse($('kb').textContent);
+const DIRECT=!!KB;
+const SDK_URL='https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.128.0/+esm';
+const STORE='copiloto.settings.v3', KEYSTORE='copiloto.apikey.v3';
+let selected='auto', file=null, previousModule=null, history=[], accessToken='', previousPatientId='', models=[], defaultModel='claude-opus-5';
+
+// ---------- armazenamento local (tolerante a bloqueio) ----------
+const ls={get(k){try{return localStorage.getItem(k)}catch{return null}},set(k,v){try{localStorage.setItem(k,v)}catch{}},del(k){try{localStorage.removeItem(k)}catch{}}};
+function loadSettings(){
+  let s={};try{s=JSON.parse(ls.get(STORE)||'{}')}catch{}
+  const key=ls.get(KEYSTORE);
+  if(key){$('apiKey').value=key;$('rememberKey').checked=true}
+  if(s.effort)$('effort').value=s.effort;
+  if(typeof s.web==='boolean')$('webSearch').checked=s.web;
+  if(typeof s.normals==='boolean')$('normalPatterns').checked=s.normals;
+  return s;
+}
+function saveSettings(){
+  ls.set(STORE,JSON.stringify({model:$('model').value,effort:$('effort').value,web:$('webSearch').checked,normals:$('normalPatterns').checked}));
+  if($('rememberKey').checked&&key())ls.set(KEYSTORE,key());else ls.del(KEYSTORE);
+  $('normalBanner').hidden=!$('normalPatterns').checked;
+}
+const key=()=>$('apiKey').value.trim();
+function settings(){return{model:$('model').value||defaultModel,effort:$('effort').value,web_search:$('webSearch').checked,normal_patterns:$('normalPatterns').checked}}
+
+// ---------- renderização segura (somente textContent) ----------
+function node(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
+function copyButton(label,text){const b=node('button','btn',label);b.type='button';b.style.marginRight='8px';b.onclick=async()=>{try{await navigator.clipboard.writeText(text);b.textContent='Copiado'}catch{b.textContent='Falha ao copiar'}setTimeout(()=>b.textContent=label,1500)};return b}
+function renderAnswer(box,text){
+  const parts=text.split(/```[a-zA-Z]*\n?/);const blocks=[];
+  parts.forEach((p,i)=>{if(!p.trim())return;if(i%2){const pre=node('pre','',p.replace(/\n$/,''));box.append(pre);blocks.push(p.replace(/\n$/,''))}else box.append(node('p','txt',p.trim()))});
+  const bar=node('div');bar.style.marginTop='10px';
+  blocks.forEach((b,i)=>bar.append(copyButton(blocks.length>1?`Copiar bloco ${i+1}`:'Copiar para prontuário',b)));
+  bar.append(copyButton('Copiar resposta inteira',text));box.append(bar);
+}
+function item(who,body,meta,extra={}){
+  $('intro').hidden=true;const box=node('article','bubble '+who);
+  if(meta)box.append(node('div','meta',meta));
+  if(extra.notice)box.append(node('div','notice',extra.notice));
+  if(who==='assistant'&&meta)renderAnswer(box,body);else box.append(document.createTextNode(body));
+  if(extra.web?.length){const g=node('div','sources','Fontes consultadas na web');for(const s of extra.web){const p=node('div');const a=node('a','',s.title||s.url);a.href=s.url;a.target='_blank';a.rel='noopener noreferrer';p.append(a);g.append(p)}box.append(g)}
+  if(extra.sources?.length){const g=node('div','sources','Referências locais recuperadas');for(const s of extra.sources){const d=document.createElement('details'),sum=document.createElement('summary');sum.textContent=s.source+' · posição '+s.offset;d.append(sum,node('p','',s.excerpt));g.append(d)}box.append(g)}
+  $('messages').append(box);box.scrollIntoView({behavior:'smooth',block:'end'});return box;
+}
+function choose(k){selected=k;for(const b of $('modules').children)b.classList.toggle('active',b.dataset.key===k)}
+function setStatus(text,ok){const e=$('status');e.textContent=text;e.classList.toggle('off',!ok)}
+
+// ---------- modo servidor ----------
+function headers(){const h={'Content-Type':'application/json','X-Copilot-Token':accessToken};if(key())h['X-Anthropic-Key']=key();return h}
+async function api(path,opts={}){
+  let r=await fetch(path,{...opts,headers:headers()});
+  if(r.status===401&&!opts.retried){const d=await r.clone().json().catch(()=>({}));if(d.detail==='Acesso não autorizado.'){accessToken=prompt('Token de acesso ao copiloto:')||'';return api(path,{...opts,retried:true})}}
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw Error(typeof data.detail==='string'?data.detail:'Erro de processamento ('+r.status+')');
+  return data;
+}
+
+// ---------- modo arquivo único: implementação no navegador ----------
+const norm=t=>t.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'');
+function route(text,requested){
+  if(requested!=='auto')return{module:requested,reason:'selecionado pelo usuário'};
+  const t=norm(text);const m=t.match(/(?:^|\s)[@/]([a-z]+)\b/);
+  if(m&&KB.modules.some(x=>x.key===m[1]))return{module:m[1],reason:'comando explícito'};
+  const ages=[...t.matchAll(/\b([0-9]{1,3})\s*anos?\b/g)].map(x=>+x[1]);
+  const ped=/\b(pediatr|crianca|lactente|recem.nascid|neonat|infantil|menino|menina|adolescente|[0-9]+\s*(?:meses|dias de vida))/.test(t)||ages.some(a=>a<18);
+  const hosp=/\b(hospital|internad|enfermaria|prescricao hospitalar|uti|leito)/.test(t);
+  if(/\b(ecg|eletrocardiograma|eletrocardiograf)/.test(t))return{module:'ecg',reason:'ECG identificado'};
+  if(/\b(maternidade|obstetr|gestante|parto|puerper|gravidez|prenatal)/.test(t))return{module:'maternidade',reason:'contexto obstétrico'};
+  if(/\b(plantao|handoff|passagem de caso)/.test(t))return{module:'passagemplantao',reason:'passagem de plantão'};
+  if(/\b(regulacao|vaga|transferencia|central de leitos)/.test(t))return{module:'regulacao',reason:'regulação'};
+  if(/\b(admissao|admitir|admitido)/.test(t))return{module:ped?'admissaoped':'admissao',reason:'admissão e faixa etária'};
+  if(/\b(evolucao|evoluir)/.test(t)&&/\b(uti|terapia intensiva)/.test(t))return{module:'evolucaouti',reason:'evolução em UTI'};
+  if(/\b(prescri|receita|medicamento|dose)/.test(t))return{module:hosp?(ped?'prescricaohospitalarped':'prescricaohospitalar'):(ped?'prescricaoambulatorioped':'prescricaoambulatorio'),reason:'prescrição: contexto e faixa etária'};
+  if(/\b(uti|terapia intensiva|ventilacao mecanica|vasopressor)/.test(t))return{module:'uti',reason:'terapia intensiva'};
+  if(hosp)return{module:'hospital',reason:'contexto hospitalar'};
+  return{module:'consultorio',reason:'atendimento geral'};
+}
+function terms(t){return new Set(norm(t).match(/[a-z0-9]{4,}/g)||[])}
+function retrieve(q,module,k=4){
+  const qt=terms(q);const score=c=>{let s=0;for(const w of c.terms)if(qt.has(w))s++;return s/Math.sqrt(c.terms.size+1)};
+  const top=(m,n)=>KB.chunks.filter(c=>c.module===m).map(c=>[score(c),c]).sort((a,b)=>b[0]-a[0]).slice(0,n).map(x=>x[1]);
+  let hits=top(module,k);if(KB.related[module])hits=hits.concat(top(KB.related[module],2));
+  return hits.map(c=>({source:c.source,offset:c.offset,text:c.text}));
+}
+function dec(x,p=4){const f=10**p;return String(Math.round((x+Number.EPSILON)*f)/f)}
+function pos(v,name){const n=Number(v);if(!Number.isFinite(n)||n<=0||n>100000)throw Error(name+' deve ser finito, positivo e ≤ 100000');return n}
+const calc={
+  calcular_dose_volume(a){const w=pos(a.peso_kg,'peso');if(w>300)throw Error('Peso fora dos limites da ferramenta');let d=w*pos(a.dose_mg_kg,'dose');if(a.dose_maxima_mg!=null)d=Math.min(d,pos(a.dose_maxima_mg,'dose máxima'));return{dose_mg:dec(d),volume_ml:dec(d/pos(a.concentracao_mg_ml,'concentração'))}},
+  calcular_manutencao_hidrica(a){const w=pos(a.peso_kg,'peso');if(w>300)throw Error('Peso fora dos limites da ferramenta');let day,h;if(w<=10){day=w*100;h=w*4}else if(w<=20){day=1000+(w-10)*50;h=40+(w-10)*2}else{day=1500+(w-20)*20;h=60+(w-20)}return{holliday_segar_ml_day:dec(day),holliday_segar_ml_h:dec(day/24),four_two_one_ml_h:dec(h)}},
+  calcular_gotejamento(a){const e=pos(a.volume_ml,'volume')*(a.fator_gotas==null?20:pos(a.fator_gotas,'fator'))/(pos(a.horas,'horas')*60);return{exact_gtt_min:dec(e),rounded_gtt_min:String(Math.round(e))}},
+  consultar_referencias(a,module){const p=KB.related[module];if(!p)throw Error('Sem módulo relacionado');return retrieve(String(a.pergunta),p,2).filter(h=>h.source.startsWith('knowledge/'+p+'/'))}
+};
+function tools(module,web){
+  const t=KB.tools.filter(x=>x.name!=='consultar_referencias'||KB.related[module]).map(x=>x.name==='consultar_referencias'?{...x,description:x.description.replace('{parent}',KB.related[module])}:x);
+  if(web)t.push({type:web,name:'web_search',max_uses:5});return t;
+}
+let clientCache=null;
+async function client(){
+  if(!key())throw Error('Informe a chave da API Claude em Configurações.');
+  if(clientCache?.k!==key()){const {default:Anthropic}=await import(SDK_URL);clientCache={k:key(),c:new Anthropic({apiKey:key(),dangerouslyAllowBrowser:true,maxRetries:2,timeout:300000})}}
+  return clientCache.c;
+}
+function explain(err){
+  const s=err?.status;if(s===401)return'Chave da API Claude inválida ou revogada.';if(s===403)return'A chave não tem permissão para este modelo ou recurso (verifique se a busca web está habilitada na organização).';
+  if(s===404)return'Modelo não encontrado para esta chave.';if(s===429)return'Limite de uso da API atingido. Aguarde e tente novamente.';
+  if(s===400)return /credit/i.test(err.message||'')?'Saldo de créditos da API insuficiente.':'Requisição recusada pela API: '+String(err.message||'').slice(0,300);
+  if(err?.name==='APIConnectionError'||err instanceof TypeError)return'Sem conexão com a API Claude (verifique internet e bloqueios de rede).';
+  return err?.message||'Falha ao executar o modelo.';
+}
+async function directChat(msg,attachments,decision,opt){
+  const snippets=retrieve(msg,decision.module);
+  const profile=KB.models[opt.model]||{adaptive:true,web:'web_search_20260209',fallbacks:false};
+  const web=opt.web_search?profile.web:null;
+  const today=new Date().toLocaleDateString('pt-BR');
+  const config=`Configuração desta solicitação:\n- Data de hoje: ${today}\n- ${opt.normal_patterns?KB.normal_on:KB.normal_off}\n- Busca web: ${web?'disponível (ferramenta web_search)':'indisponível nesta solicitação'}`;
+  const bg=snippets.map(x=>`[Fonte: ${x.source} • posição ${x.offset}]\n${x.text}`).join('\n\n');
+  const text=`${config}\n\nPedido do profissional:\n${msg}\n\nTrechos locais pré-recuperados (apenas para rastreabilidade; o conteúdo integral está no prompt):\n${bg||'Nenhum trecho.'}`;
+  const content=attachments.map(a=>({type:a.media_type==='application/pdf'?'document':'image',source:{type:'base64',media_type:a.media_type,data:a.data}})).concat([{type:'text',text}]);
+  const messages=history.map(x=>({role:x.role,content:x.content})).concat([{role:'user',content}]);
+  const m=KB.modules.find(x=>x.key===decision.module);
+  const params={model:opt.model,max_tokens:16000,tools:tools(decision.module,web),
+    system:[{type:'text',text:KB.safety},{type:'text',text:`ESPECIALISTA: ${decision.module} (${m.title})\nConteúdo integral do SKILL.md e das referências deste especialista:\n\n${KB.context[decision.module]}`,cache_control:{type:'ephemeral',ttl:'1h'}}]};
+  if(profile.adaptive){params.thinking={type:'adaptive'};params.output_config={effort:opt.effort}}
+  if(profile.fallbacks){params.betas=['server-side-fallback-2026-07-01'];params.fallbacks='default'}
+  const c=await client();let resp,notice='',webSources=[],used=[];
+  for(let step=0;;step++){
+    if(step>=10){notice='Limite de etapas de ferramenta atingido; a resposta pode estar incompleta.';break}
+    resp=await c.beta.messages.create({...params,messages});
+    for(const b of resp.content)if(b.type==='web_search_tool_result'&&Array.isArray(b.content))for(const r of b.content)if(r.url)webSources.push({title:r.title,url:r.url});
+    if(resp.stop_reason==='refusal')return{answer:'O modelo recusou esta solicitação. Reformule o pedido com o contexto clínico e a finalidade assistencial.',module:decision.module,routing_reason:decision.reason,sources:[],web_sources:[],notice:'refusal',model:resp.model};
+    messages.push({role:'assistant',content:resp.content});
+    if(resp.stop_reason==='pause_turn')continue;
+    if(resp.stop_reason==='tool_use'){
+      const results=[];
+      for(const b of resp.content){if(b.type!=='tool_use')continue;used.push(b.name);
+        try{results.push({type:'tool_result',tool_use_id:b.id,content:JSON.stringify(calc[b.name](b.input,decision.module))})}
+        catch(e){results.push({type:'tool_result',tool_use_id:b.id,content:'Erro: '+e.message,is_error:true})}}
+      messages.push({role:'user',content:results});continue;
+    }
+    if(resp.stop_reason==='max_tokens')notice='Resposta interrompida pelo limite de tamanho; revise se está completa.';
+    break;
+  }
+  const answer=resp.content.filter(b=>b.type==='text').map(b=>b.text).join('\n\n').trim();
+  const uniq=[...new Map(webSources.map(s=>[s.url,s])).values()].slice(0,12);
+  return{answer:answer||'Sem texto na resposta do modelo.',module:decision.module,routing_reason:decision.reason,model:resp.model,web_sources:uniq,notice,tools:used,
+    sources:snippets.map(x=>({source:x.source,offset:x.offset,excerpt:x.text.slice(0,350)}))};
+}
+
+// ---------- inicialização ----------
+function fillModels(list,def,saved){
+  models=list;defaultModel=def;$('model').replaceChildren(...list.map(m=>{const o=node('option','',m.label);o.value=m.id;return o}));
+  $('model').value=list.some(m=>m.id===saved)?saved:def;
+}
+function fillModules(items){
+  $('modules').replaceChildren();
+  for(const m of [{key:'auto',title:'Automático'},...items]){const b=node('button','',m.title);b.type='button';b.dataset.key=m.key;b.onclick=()=>choose(m.key);$('modules').append(b)}
+  choose('auto');
+}
+function refreshStatus(extra){const ok=!!key()||extra;setStatus(ok?'Chave configurada'+(DIRECT?' · arquivo único':' · servidor local'):'Informe a chave da API Claude',ok);if(!ok)$('settings').open=true}
+async function init(){
+  const saved=loadSettings();$('normalBanner').hidden=!$('normalPatterns').checked;
+  if(DIRECT){
+    for(const c of KB.chunks)c.terms=terms(c.text);
+    fillModules(KB.modules);fillModels(Object.entries(KB.models).map(([id,v])=>({id,label:v.label})),KB.default_model,saved.model);
+    $('fhirBox').hidden=true;
+    $('modeHint').textContent='Modo arquivo único: a conversa vai direto do navegador para a API da Anthropic. A chave fica apenas neste dispositivo (memória ou armazenamento local, se marcado). Requer internet.';
+    refreshStatus(false);return;
+  }
+  const h=await api('/api/health');
+  const [mods,mdl]=await Promise.all([api('/api/modules'),api('/api/models')]);
+  fillModules(mods);fillModels(mdl.models,mdl.default,saved.model);
+  $('modeHint').textContent='Modo servidor local: a chave é enviada ao seu servidor a cada solicitação e repassada à API da Anthropic; o servidor não a grava.'+(h.server_key?' Há chave configurada no servidor (ANTHROPIC_API_KEY); a chave digitada aqui tem prioridade.':'')+(h.fhir?' FHIR configurado.':'');
+  refreshStatus(h.server_key);
+}
+init().catch(e=>setStatus(e.message||'Servidor indisponível',false));
+
+for(const id of ['model','effort','webSearch','normalPatterns','rememberKey'])$(id).onchange=saveSettings;
+$('apiKey').oninput=()=>{saveSettings();refreshStatus(false);$('keyResult').textContent=''};
+$('toggleKey').onclick=()=>{const i=$('apiKey');i.type=i.type==='password'?'text':'password';$('toggleKey').textContent=i.type==='password'?'Mostrar':'Ocultar'};
+$('clearKey').onclick=()=>{$('apiKey').value='';$('rememberKey').checked=false;ls.del(KEYSTORE);clientCache=null;refreshStatus(false);$('keyResult').textContent='Chave apagada.'};
+$('checkKey').onclick=async()=>{
+  const out=$('keyResult');out.textContent='Testando…';
+  try{
+    let r;if(DIRECT){r=await (await client()).models.retrieve($('model').value);r={model:r.id,display_name:r.display_name}}
+    else r=await api('/api/key/check',{method:'POST',body:JSON.stringify({model:$('model').value})});
+    out.textContent='Chave válida · '+(r.display_name||r.model);
+  }catch(e){out.textContent=DIRECT?explain(e):e.message}
+};
+function resetChat(){history=[];previousModule=null;$('messages').replaceChildren();$('intro').hidden=false}
+$('newChat').onclick=()=>{resetChat();previousPatientId='';$('patientId').value='';$('confirmId').checked=false;$('useFhir').checked=false;choose('auto')};
+$('file').onchange=e=>{file=e.target.files[0]||null;$('attachment').textContent=file?file.name:''};
+$('message').onkeydown=e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();$('form').requestSubmit()}};
 function encode(f){return new Promise((ok,fail)=>{const rd=new FileReader();rd.onload=()=>ok(String(rd.result).split(',')[1]);rd.onerror=fail;rd.readAsDataURL(f)})}
-document.getElementById('form').onsubmit=async e=>{e.preventDefault();const input=document.getElementById('message'),send=document.getElementById('send'),msg=input.value.trim();if(!msg)return;const currentPatientId=document.getElementById('patientId').value.trim();if(history.length&&(currentPatientId!==previousPatientId||(selected!=='auto'&&previousModule&&selected!==previousModule))){history=[];previousModule=null;messages.replaceChildren();document.getElementById('intro').hidden=false}if(file&&file.size>8*1024*1024){item('assistant','Arquivo excede 8 MB');return}send.disabled=true;item('user',msg+(file?'\n📎 '+file.name:''));try{const image=file?await encode(file):null;const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','X-Copilot-Token':accessToken},body:JSON.stringify({message:msg,module:selected,image,filename:file?.name,history,previous_module:previousModule,include_medications:document.getElementById('useFhir').checked,patient_id:document.getElementById('patientId').value.trim()||null,confirmed_patient_id:document.getElementById('confirmId').checked})});const result=await response.json();if(!response.ok)throw Error(typeof result.detail==='string'?result.detail:'Erro de processamento');item('assistant',result.answer,result.module+' · '+result.routing_reason+(result.fhir_used?' · FHIR consultado':''),result.sources);history.push({role:'user',content:msg.slice(0,3000)},{role:'assistant',content:result.answer.slice(0,3000)});history=history.slice(-8);previousModule=result.module;previousPatientId=currentPatientId;input.value='';document.getElementById('file').value='';document.getElementById('attachment').textContent='';file=null}catch(err){item('assistant',err.message||'Falha de conexão')}finally{send.disabled=false;input.focus()}};
-</script></body></html>
+function mimeOf(f){if(f.type==='application/pdf'||/\.pdf$/i.test(f.name))return'application/pdf';if(['image/png','image/jpeg','image/webp'].includes(f.type))return f.type;throw Error('Aceitos PNG, JPEG, WEBP ou PDF')}
+
+$('form').onsubmit=async e=>{
+  e.preventDefault();const input=$('message'),send=$('send'),msg=input.value.trim();if(msg.length<3)return;
+  if(!key()&&DIRECT){$('settings').open=true;item('assistant','Informe a chave da API Claude em Configurações.');return}
+  const pid=$('patientId').value.trim();
+  if(history.length&&(pid!==previousPatientId||(selected!=='auto'&&previousModule&&selected!==previousModule)))resetChat();
+  if(file&&file.size>8*1024*1024){item('assistant','Arquivo excede 8 MB');return}
+  send.disabled=true;item('user',msg+(file?'\n📎 '+file.name:''));
+  const wait=item('assistant','Processando… 0 s');const t0=Date.now();const timer=setInterval(()=>wait.textContent='Processando… '+Math.round((Date.now()-t0)/1000)+' s',1000);
+  try{
+    const attachments=file?[{media_type:mimeOf(file),data:await encode(file)}]:[];const opt=settings();let result;
+    if(DIRECT){
+      let decision=route(msg,selected);
+      if(selected==='auto'&&decision.reason==='atendimento geral'&&history.length&&previousModule)decision={module:previousModule,reason:'selecionado pelo usuário'};
+      try{result=await directChat(msg,attachments,decision,opt)}catch(err){throw Error(explain(err))}
+    }else{
+      result=await api('/api/chat',{method:'POST',body:JSON.stringify({message:msg,module:selected,image:attachments[0]?.data||null,filename:file?.name,history,previous_module:previousModule,
+        include_medications:$('useFhir').checked,patient_id:pid||null,confirmed_patient_id:$('confirmId').checked,...opt})});
+    }
+    wait.remove();
+    const meta=[result.module,result.routing_reason,result.model,result.fhir_used?'FHIR consultado':'',result.tools?.length?'ferramentas: '+[...new Set(result.tools)].join(', '):''].filter(Boolean).join(' · ');
+    item('assistant',result.answer,meta,{sources:result.sources,web:result.web_sources,notice:result.notice==='refusal'?'':result.notice});
+    history.push({role:'user',content:msg.slice(0,12000)},{role:'assistant',content:result.answer.slice(0,12000)});history=history.slice(-12);
+    previousModule=result.module;previousPatientId=pid;input.value='';$('file').value='';$('attachment').textContent='';file=null;
+  }catch(err){wait.remove();item('assistant',err.message||'Falha de conexão')}
+  finally{clearInterval(timer);send.disabled=false;input.focus()}
+};
+</script>
+</body>
+</html>

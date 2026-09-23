@@ -1,4 +1,4 @@
-"""FastAPI local. Os dados clínicos não são gravados em servidor ou navegador."""
+"""FastAPI local. Os dados clínicos e a chave da API não são gravados no servidor."""
 import base64
 import hmac
 import json
@@ -6,6 +6,7 @@ import os
 import re
 import unicodedata
 from contextlib import asynccontextmanager
+import anthropic
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
@@ -14,12 +15,14 @@ from .router import route
 from .rag import ensure_index, retrieve, status
 from .tools import calculate
 
+KEY_HEADER = 'X-Anthropic-Key'
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     ensure_index()
     yield
 
-app=FastAPI(title='Copiloto Clínico Multiagente',version='2.0.0',lifespan=lifespan,docs_url='/api/docs',redoc_url=None)
+app=FastAPI(title='Copiloto Clínico Multiagente',version='3.0.0',lifespan=lifespan,docs_url='/api/docs',redoc_url=None)
 
 @app.middleware('http')
 async def no_store(request:Request,call_next):
@@ -35,22 +38,34 @@ async def no_store(request:Request,call_next):
 
 class Turn(BaseModel):
     role: str = Field(pattern='^(user|assistant)$')
-    content: str = Field(min_length=1,max_length=3000)
+    content: str = Field(min_length=1,max_length=12000)
 
 class ChatInput(BaseModel):
     message: str = Field(min_length=3,max_length=20000)
     module: str = 'auto'
     image: str | None = None
     filename: str | None = None
-    history: list['Turn'] = Field(default_factory=list,max_length=8)
+    history: list['Turn'] = Field(default_factory=list,max_length=12)
     patient_id: str | None = Field(default=None,max_length=64)
     previous_module: str | None = None
     confirmed_patient_id: bool = False
     include_medications: bool = False
+    model: str | None = Field(default=None,max_length=64,pattern=r'^claude-[a-z0-9.-]+$')
+    effort: str = Field(default='high',pattern='^(low|medium|high|xhigh|max)$')
+    web_search: bool = True
+    normal_patterns: bool = False
 
 class CalcInput(BaseModel):
     command: str
     values: dict
+
+class KeyCheck(BaseModel):
+    model: str | None = Field(default=None,max_length=64,pattern=r'^claude-[a-z0-9.-]+$')
+
+
+def api_key(request: Request) -> str | None:
+    key=request.headers.get(KEY_HEADER,'').strip()
+    return key or os.getenv('ANTHROPIC_API_KEY') or None
 
 @app.get('/')
 def home():
@@ -60,10 +75,29 @@ def home():
 def modules():
     return [vars(x) for x in SPECS]
 
+@app.get('/api/models')
+def models():
+    from .agents import DEFAULT_MODEL, MODELS
+    return {'default':DEFAULT_MODEL,'models':[{'id':k,'label':v['label']} for k,v in MODELS.items()]}
+
 @app.get('/api/health')
-def health():
+def health(request: Request):
+    from .agents import DEFAULT_MODEL
     from .fhir import configured
-    return {'ready':bool(os.getenv('OPENAI_API_KEY')),'index':status(),'specialists':len(REGISTRY),'model':os.getenv('OPENAI_MODEL','gpt-4.1'),'fhir':configured(),'protected':bool(os.getenv('COPILOT_ACCESS_TOKEN'))}
+    return {'ready':bool(api_key(request)),'server_key':bool(os.getenv('ANTHROPIC_API_KEY')),'index':status(),
+            'specialists':len(REGISTRY),'model':DEFAULT_MODEL,'fhir':configured(),'protected':bool(os.getenv('COPILOT_ACCESS_TOKEN'))}
+
+@app.post('/api/key/check')
+def key_check(payload: KeyCheck, request: Request):
+    """Valida a chave consultando o modelo escolhido na API de modelos (sem consumo de tokens)."""
+    from .agents import DEFAULT_MODEL, client_for
+    try:
+        info=client_for(api_key(request)).models.retrieve(payload.model or DEFAULT_MODEL)
+    except PermissionError as exc:
+        raise HTTPException(422,str(exc)) from exc
+    except Exception as exc:
+        raise api_error(exc) from exc
+    return {'ok':True,'model':info.id,'display_name':info.display_name}
 
 @app.post('/api/tools/pediatrics')
 def calculator(payload:CalcInput):
@@ -71,43 +105,51 @@ def calculator(payload:CalcInput):
     except ValueError as exc: raise HTTPException(422,str(exc)) from exc
 
 
-def image_data(payload:ChatInput):
-    if not payload.image: return None
+def attachment_data(payload:ChatInput) -> list[dict]:
+    if not payload.image: return []
     try: raw=base64.b64decode(payload.image,validate=True)
-    except Exception as exc: raise HTTPException(422,'Imagem inválida') from exc
+    except Exception as exc: raise HTTPException(422,'Arquivo inválido') from exc
     if len(raw)>8*1024*1024: raise HTTPException(413,'Arquivo excede 8 MB')
-    if raw.startswith(b'%PDF-'):
-        try:
-            import fitz
-            pdf=fitz.open(stream=raw,filetype='pdf')
-            if pdf.page_count < 1 or pdf.page_count>5: raise HTTPException(422,'PDF deve conter entre 1 e 5 páginas')
-            pages=[]
-            for page in pdf:
-                image=page.get_pixmap(matrix=fitz.Matrix(1.4,1.4),alpha=False)
-                if image.width*image.height>6_000_000:
-                    raise HTTPException(413,'Página de PDF com dimensões excessivas')
-                data=image.tobytes('png')
-                pages.append('data:image/png;base64,'+base64.b64encode(data).decode())
-            return pages
-        except HTTPException: raise
-        except Exception as exc: raise HTTPException(422,'PDF inválido') from exc
-    if raw.startswith(b'\x89PNG\r\n\x1a\n'): mime='image/png'
+    if raw.startswith(b'%PDF-'): mime='application/pdf'
+    elif raw.startswith(b'\x89PNG\r\n\x1a\n'): mime='image/png'
     elif raw.startswith(b'\xff\xd8\xff'): mime='image/jpeg'
-    else: raise HTTPException(422,'Aceitos PNG, JPEG ou PDF')
-    return [f'data:{mime};base64,{base64.b64encode(raw).decode()}']
+    elif raw[:4]==b'RIFF' and raw[8:12]==b'WEBP': mime='image/webp'
+    else: raise HTTPException(422,'Aceitos PNG, JPEG, WEBP ou PDF')
+    return [{'media_type':mime,'data':base64.b64encode(raw).decode()}]
+
+
+def api_error(exc: Exception) -> HTTPException:
+    """Traduz erros da API sem expor detalhes clínicos ou a chave."""
+    if isinstance(exc,anthropic.AuthenticationError):
+        return HTTPException(401,'Chave da API Claude inválida ou revogada.')
+    if isinstance(exc,anthropic.PermissionDeniedError):
+        return HTTPException(403,'A chave não tem permissão para este modelo ou recurso (verifique também se a busca web está habilitada na organização).')
+    if isinstance(exc,anthropic.NotFoundError):
+        return HTTPException(404,'Modelo não encontrado para esta chave.')
+    if isinstance(exc,anthropic.RateLimitError):
+        return HTTPException(429,'Limite de uso da API atingido. Aguarde e tente novamente.')
+    if isinstance(exc,anthropic.BadRequestError):
+        message=str(getattr(exc,'message','') or '')
+        if 'credit' in message.lower():
+            return HTTPException(402,'Saldo de créditos da API insuficiente.')
+        return HTTPException(400,'Requisição recusada pela API: '+message[:300])
+    if isinstance(exc,anthropic.APIConnectionError):
+        return HTTPException(502,'Sem conexão com a API Claude.')
+    return HTTPException(502,'Falha ao executar o modelo. Verifique chave, modelo e conectividade.')
 
 @app.post('/api/chat')
-def chat(payload:ChatInput):
+def chat(payload:ChatInput, request: Request):
     try: decision=route(payload.message,payload.module)
     except ValueError as exc: raise HTTPException(422,str(exc)) from exc
     if payload.module=='auto' and decision.reason=='atendimento geral' and payload.history:
         # Complementos curtos continuam no especialista do turno anterior.
         last=payload.previous_module
         if last in REGISTRY: decision=route(payload.message,last)
-    picture=image_data(payload)
+    attachments=attachment_data(payload)
     snippets=retrieve(payload.message,decision.module)
-    if not os.getenv('OPENAI_API_KEY'):
-        raise HTTPException(503,'Configure OPENAI_API_KEY no ambiente para habilitar os agentes de linguagem.')
+    key=api_key(request)
+    if not key:
+        raise HTTPException(503,'Informe a chave da API Claude em Configurações para habilitar os especialistas.')
     clinical_context=''
     plain=''.join(c for c in unicodedata.normalize('NFKD',payload.message.lower()) if not unicodedata.combining(c))
     request_history=bool(re.search(r'(historico de (?:prescric|receit|medic)|(?:prescric|receit|medic)[a-z ]* (?:ativas|em uso|registrad)|(?:medicamentos?|prescricoes?) do prontuario)',plain))
@@ -121,13 +163,18 @@ def chat(payload:ChatInput):
             raise HTTPException(422,str(exc)) from exc
         except FHIRLookupError as exc:
             raise HTTPException(502,str(exc)) from exc
-        clinical_context='\nPrescrições retornadas pelo FHIR para o ID confirmado '+payload.patient_id+':\n'+json.dumps(meds,ensure_ascii=False)
+        clinical_context='\n\nPrescrições retornadas pelo FHIR para o ID confirmado '+payload.patient_id+':\n'+json.dumps(meds,ensure_ascii=False)
+    from . import agents
     try:
-        from .agents import respond
-        answer=respond(decision.module,payload.message,snippets,picture,
-                       history=[x.model_dump() for x in payload.history],clinical_context=clinical_context)
+        result=agents.respond(decision.module,payload.message,snippets,attachments,
+                              history=[x.model_dump() for x in payload.history],clinical_context=clinical_context,
+                              api_key=key,model=payload.model,effort=payload.effort,
+                              web_search=payload.web_search,normal_patterns=payload.normal_patterns)
+    except PermissionError as exc:
+        raise HTTPException(503,str(exc)) from exc
     except Exception as exc:
-        # Não devolver detalhes de API ou informações clínicas em erros.
-        raise HTTPException(502,'Falha ao executar o modelo. Verifique chave, modelo e conectividade.') from exc
-    return {'module':decision.module,'routing_reason':decision.reason,'answer':answer,'fhir_used':bool(clinical_context),
+        raise api_error(exc) from exc
+    return {'module':decision.module,'routing_reason':decision.reason,'answer':result['answer'],'fhir_used':bool(clinical_context),
+            'model':result['model'],'web_sources':result['web_sources'],'tools':result['tools'],'notice':result['notice'],
+            'normal_patterns':payload.normal_patterns,
             'sources':[{'source':x['source'],'offset':x['offset'],'excerpt':x['text'][:350]} for x in snippets]}

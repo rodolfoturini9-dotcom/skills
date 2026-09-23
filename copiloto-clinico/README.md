@@ -1,60 +1,82 @@
-# Copiloto Clínico Multiagente
+# Copiloto Clínico Multiagente — versão 3 (API Claude)
 
-Aplicação local em **FastAPI + LangChain + ChromaDB** construída a partir dos 14 `SKILL.md` e 43 arquivos da pasta `references/` enviados pelo usuário. Interface em português, roteador por intenção, um agente por módulo, citações locais e ferramenta determinística de cálculo pediátrico.
+Copiloto em português com 14 especialistas, cada um definido por um `SKILL.md` e suas `references/` (57 arquivos em `knowledge/`, íntegros conforme `knowledge/MANIFEST.json`). Os especialistas usam a API Claude da Anthropic. A chave é informada na própria interface, em **Configurações**.
 
-## Iniciar
+## Duas formas de uso
 
-Requer Python 3.11+ e acesso à API do modelo configurado.
+| | Arquivo único (`dist/copiloto_clinico.html`) | Servidor local (FastAPI) |
+|---|---|---|
+| Instalação | Nenhuma: abrir o arquivo no navegador (computador, tablet ou celular) | Python 3.11+ |
+| Chave da API | Campo em Configurações; vai do navegador direto para a Anthropic | Campo em Configurações (repassado a cada solicitação) ou `ANTHROPIC_API_KEY` no servidor |
+| Consulta FHIR de prescrições | Não disponível | Disponível (`FHIR_BASE_URL`, `FHIR_BEARER_TOKEN`) |
+| Token de acesso (`COPILOT_ACCESS_TOKEN`) | Não se aplica | Disponível |
+| Internet | Necessária (API e carregamento do SDK via jsDelivr) | Necessária para a API |
+
+### Arquivo único
+
+1. Abra `dist/copiloto_clinico.html`.
+2. Em **Configurações**, cole a chave criada em https://console.anthropic.com/ (API Keys) e clique em **Testar chave**.
+3. Marque **Lembrar neste navegador** somente em dispositivo pessoal. Sem essa opção, a chave fica apenas na memória da aba.
+
+Após alterar `knowledge/` ou `web/index.html`, regenere o arquivo com `python scripts/build_standalone.py`.
+
+### Servidor local
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate       # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-export OPENAI_API_KEY='sua-chave' # Windows PowerShell: $env:OPENAI_API_KEY='sua-chave'
-export OPENAI_MODEL='gpt-4.1'    # opcional; use um modelo com suporte a imagem
 uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Abra http://127.0.0.1:8000/ . Endpoints documentados em http://127.0.0.1:8000/api/docs . O índice é criado automaticamente na primeira inicialização em `data/chroma/`; mantenha a pasta `data/` fora do ZIP e de repositórios. Para testar: `pip install pytest httpx && pytest -q`.
+Abra http://127.0.0.1:8000/ e informe a chave em Configurações. A chave digitada tem prioridade sobre `ANTHROPIC_API_KEY`. O servidor não grava a chave nem a conversa. Documentação da API: http://127.0.0.1:8000/api/docs.
 
-## Fluxo
+Docker: `cp .env.example .env`, edite e rode `docker compose up --build -d` (porta vinculada a `127.0.0.1:8000`).
 
-1. `/api/chat` recebe texto e imagem opcional PNG/JPEG/PDF; PDF é renderizado em até cinco páginas, com limite de 8 MB por arquivo.
-2. `app/router.py` seleciona módulo automaticamente por termos específicos ou respeita seleção manual e comandos `@ecg`, `/admissaoped` etc. Quando houver ambiguidade, escolha o módulo na interface.
-3. `app/rag.py` indexa os arquivos `SKILL.md` e `references/` em Chroma local; embeddings hash de palavras e trigramas são determinísticos e não exigem download. Esse método oferece recuperação lexical aproximada, sem equivalência à busca semântica com embeddings treinados. O retorno inclui caminho e posição do trecho.
-4. `app/agents.py` instancia separadamente cada agente LangChain com `SKILL.md` completo, regras globais de segurança, ferramenta de consulta ao RAG e três funções pediátricas. O agente pode chamar o script original via subprocesso com argumentos validados e sem shell.
-5. A resposta e as fontes pré-recuperadas aparecem no chat. `GET /api/health`, `GET /api/modules` e `POST /api/tools/pediatrics` apoiam integração e auditoria.
+## Configurações da interface
 
-## Módulos
+- **Modelo**: Claude Opus 5 (padrão), Claude Fable 5.1 (máxima capacidade, maior custo), Claude Sonnet 5 (mais rápido e econômico) e Claude Haiku 4.5 (tarefas simples). O padrão do servidor pode ser alterado por `ANTHROPIC_MODEL`.
+- **Esforço de raciocínio**: de baixo a máximo. Alto é o padrão. Esforço maior aumenta o tempo e o custo da resposta.
+- **Busca web**: permite ao especialista verificar diretriz, dose ou protocolo atual, como os SKILL.md de prescrição exigem. É cobrada por busca e precisa estar habilitada na organização do Console. As fontes consultadas aparecem abaixo da resposta.
+- **Padrões de normalidade**: vem desligado. Desligado, nada é completado: itens sem dado são omitidos ou marcados `[não informado]`. Ligado, aplica os textos-padrão de exame físico e os "Nega…" de APP/MUCs/alergias definidos nos SKILL.md de admissão e maternidade, e a interface mostra um aviso de conferência.
 
-`admissao`, `admissaoped`, `ecg`, `evolucaouti`, `passagemplantao`, `prescricaoambulatorio`, `prescricaoambulatorioped`, `prescricaohospitalar`, `prescricaohospitalarped`, `regulacao`, `consultorio`, `hospital`, `uti`, `maternidade`.
+## Arquitetura
 
-## Calculadora
+1. **Roteamento** (`app/router.py`): regras determinísticas e auditáveis, comandos `@ecg`, `/admissaoped` etc., ou seleção manual. Complementos curtos continuam no especialista anterior.
+2. **Conhecimento** (`app/rag.py`): o `SKILL.md` e todas as referências do especialista vão integralmente ao prompt de sistema, com cache de 1 hora. Isso substitui a recuperação aproximada da versão 2 como fonte principal. A recuperação lexical local continua em uso para exibir trechos rastreáveis na resposta e para a ferramenta `consultar_referencias` (módulo relacionado, por exemplo `admissao` → `hospital`).
+3. **Especialista** (`app/agents.py`): chamada à API com raciocínio adaptativo, `fallbacks: "default"` (Opus 5 e Fable 5.1; em caso de recusa por classificador de segurança, a própria API repete a solicitação em modelo alternativo), laço de ferramentas e tratamento de `pause_turn`, `max_tokens` e `refusal`.
+4. **Ferramentas**: `calcular_dose_volume`, `calcular_manutencao_hidrica` e `calcular_gotejamento` executam o script original `scripts/calcular_pediatria.py` (a versão de arquivo único usa porte equivalente em JavaScript). Também estão disponíveis `consultar_referencias` e a busca web (`web_search`).
+5. **Anexos**: PNG, JPEG, WEBP e PDF de até 8 MB. O PDF é enviado nativamente, com texto e imagem de cada página.
+6. **Histórico**: últimos 12 turnos de texto, com até 12.000 caracteres cada. Anexos de turnos anteriores não são reenviados.
 
-O endpoint `/api/tools/pediatrics` aceita `command: "dose-volume"` com `weight_kg`, `dose_mg_kg`, `concentration_mg_ml` e opcional `max_dose_mg`; `"maintenance"` com `weight_kg`; ou `"drip"` com `volume_ml`, `hours` e opcional `drop_factor`. As doses e concentrações de entrada precisam ser verificadas por um profissional. O script calcula aritmética, não decide indicações ou ajustes clínicos.
+Endpoints: `POST /api/chat`, `POST /api/key/check`, `GET /api/health`, `GET /api/modules`, `GET /api/models` e `POST /api/tools/pediatrics`. Esse último aceita `dose-volume` (`weight_kg`, `dose_mg_kg`, `concentration_mg_ml` e, opcionalmente, `max_dose_mg`), `maintenance` (`weight_kg`) e `drip` (`volume_ml`, `hours` e, opcionalmente, `drop_factor`).
 
-## Limites e implantação
+## Validação
 
-Esta versão é para execução local por profissional responsável. Dados da conversa não são guardados no backend nem no navegador após recarregar, porém são enviados ao provedor do modelo configurado. As referências anexadas são conteúdo fornecido pelo usuário e não foram validadas ou atualizadas clinicamente. Não use a aplicação como prescrição autônoma. Para uso institucional ou multiusuário, implementar autenticação institucional, perfis de acesso, consentimento e tratamento de dados, trilha de auditoria, versionamento e aprovação de protocolos, contrato adequado com o provedor, testes clínicos e revisão jurídica/LGPD antes de disponibilizar dados de pacientes. Não exponha `uvicorn` em `0.0.0.0` sem essa infraestrutura. ECG por imagem requer exame legível e interpretação humana.
+`pip install pytest && python -m pytest -q` cobre:
 
-## Atualização 2.0: conversa, acesso e prontuário
+- roteamento, incluindo a faixa etária;
+- conhecimento integral por módulo e rastreabilidade;
+- calculadora;
+- chave por cabeçalho e opções da interface;
+- token de acesso e continuidade da conversa;
+- filtragem FHIR e PDF nativo;
+- tradução de erros da API sem expor a chave;
+- laço de ferramentas com cliente simulado (cache, `fallbacks`, raciocínio e resultado da ferramenta);
+- perfil do Haiku;
+- geração do arquivo único.
 
-- A interface conserva no navegador somente os últimos oito turnos da conversa atual; **Nova conversa** apaga contexto e seleção do paciente. Mudar o ID técnico do paciente limpa o histórico ativo. Não há persistência clínica no backend.
-- Configure `COPILOT_ACCESS_TOKEN` com um segredo aleatório para proteger API e documentação. O navegador solicita o token e o mantém apenas em memória. Esse controle simples é adequado ao uso pessoal local; para acesso público ou multiusuário, substitua por autenticação institucional, TLS e perfis de acesso.
-- Ao solicitar medicações registradas, a aplicação consulta automaticamente `MedicationRequest` FHIR R4 **apenas** com ID técnico do paciente confirmado. Habilite com `FHIR_BASE_URL=https://...` e `FHIR_BEARER_TOKEN=...`; sem essas credenciais, o prontuário não pode ser consultado. O servidor filtra localmente resultados de outros pacientes e limita a 50 entradas. A interface permite acionar a busca explicitamente. Nenhuma prescrição é escrita no FHIR.
-- A análise de PDF envia até cinco páginas como imagens ao modelo; para ECG, forneça a imagem em resolução legível. O texto das referências possui manifesto SHA-256: `python scripts/verify_knowledge.py`.
-- Para recuperação com embeddings treinados, use `RAG_EMBEDDINGS=openai` e `OPENAI_API_KEY`; o índice será construído em diretório separado e haverá cobrança das chamadas de indexação. O padrão `hash` funciona sem chamadas externas para indexar.
+`python scripts/verify_knowledge.py` confere o SHA-256 das referências.
 
-### Alternativa por Docker Compose
+Esses testes **não equivalem** a validação clínica de doses, condutas, desempenho multimodal ou segurança do paciente. Antes de uso institucional, é preciso:
 
-```bash
-cp .env.example .env
-# Edite .env e informe OPENAI_API_KEY; adicione as demais opções desejadas.
-docker compose up --build -d
-```
+- homologar os protocolos;
+- testar com casos representativos;
+- implantar autenticação, auditoria, contrato com o provedor e adequação à LGPD.
 
-A porta é vinculada a `127.0.0.1:8000`. O volume `copiloto_data` contém apenas o índice dos protocolos. A imagem Docker e uma chamada real ao provedor de modelo não foram validadas neste ambiente; os fluxos locais foram testados com o modelo substituído por um simulador.
+## Limites
 
-### Estado de validação
-
-`python -m pytest -q` verifica roteamento, rastreabilidade do RAG, calculadora, autenticação, continuidade da conversa e filtragem FHIR. Isso **não equivale** a validação de dose, conduta, desempenho multimodal ou segurança clínica em pacientes. Antes de uso institucional, homologar os protocolos, testar o modelo com casos representativos e implantar autenticação e auditoria compatíveis com a organização.
+- Todo texto é rascunho para revisão e assinatura do médico responsável. O especialista não prescreve de forma autônoma.
+- Os dados enviados são processados pela API da Anthropic. Não exponha o servidor em `0.0.0.0` nem publique o arquivo único com chave salva.
+- As referências são material do usuário e não foram atualizadas clinicamente nesta versão. `knowledge/uti/references/base_medicamentos.jsonl` contém grafias irregulares herdadas da origem (ex.: `DIPIRONA 10 00MG/ 2ML`).
+- ECG por imagem requer traçado legível e interpretação humana.
