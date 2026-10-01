@@ -162,7 +162,7 @@ function BedHandoffSheet({ bedId, onClose }) {
             <section>
               <h3 className="text-sm font-bold uppercase tracking-wide text-[#15618a]">HMA / Suportes <span className="font-normal normal-case text-slate-500">· da ficha D-0</span></h3>
               <div className="mt-1.5 grid gap-1.5 rounded-xl bg-[#f1f6fa] p-3 text-[15px]">
-                {p.situacao.map((s) => <div key={s.titulo}><b className="text-[#123b60]">{s.titulo}:</b> {s.itens.join(' · ')}</div>)}
+                {p.situacao.map((s) => <div key={s.titulo}><b className="text-[#123b60]"># {s.titulo}:</b> {s.itens.join(' | ')}</div>)}
               </div>
             </section>
           )}

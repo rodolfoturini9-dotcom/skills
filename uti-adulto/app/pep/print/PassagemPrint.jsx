@@ -14,7 +14,8 @@ const S = {
   cellTitle: { flex: 'none', background: '#15618a', color: '#fff', textAlign: 'center', fontSize: 9, fontWeight: 700, lineHeight: '15px' },
   body: { flex: 1, minHeight: 0, padding: '4px 5px', fontSize: 'var(--row-font, 8.5px)', lineHeight: 1.13, overflowWrap: 'anywhere' },
   bullet: { display: 'flex', gap: 3, margin: '0 0 2px' },
-  sec: { margin: '2px 0 1px', color: '#123b60', fontWeight: 800, fontSize: 'calc(var(--row-font, 8.5px) + .3px)' },
+  supBlock: { margin: '0 0 calc(var(--row-font, 8.5px) * .9)' },
+  sec: { margin: '0 0 1px', color: '#123b60', fontWeight: 800, fontSize: 'calc(var(--row-font, 8.5px) + .3px)' },
 };
 
 const Bullets = ({ items }) => (items || []).map((t, i) => (
@@ -45,7 +46,7 @@ function PatientRow({ p }) {
       <Cell label="HMP"><Bullets items={[...(p.antecedentes_historia || []), ...(p.historia_atual || [])]} /></Cell>
       <Cell label="HMA / SUPORTES">
         {(p.situacao || []).map((s) => (
-          <React.Fragment key={s.titulo}><div style={S.sec}>{s.titulo}</div><Bullets items={s.itens} /></React.Fragment>
+          <div key={s.titulo} style={S.supBlock}><div style={S.sec}># {s.titulo}:</div><div>{s.itens.join(' | ')}</div></div>
         ))}
       </Cell>
       <Cell label="CD / METAS"><Bullets items={p.condutas} /></Cell>
