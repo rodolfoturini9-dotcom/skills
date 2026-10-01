@@ -33,7 +33,9 @@ export class ClaudeError extends Error {
 // O gateway não repassa cabeçalhos beta; nesse modo o fallback de recusa (beta) fica desativado.
 export function isGateway(baseURL?: string) { return !!baseURL && !/^https:\/\/api\.anthropic\.com\/?$/.test(baseURL); }
 export function configFromEnv(env: {ANTHROPIC_API_KEY?: string; ANTHROPIC_MODEL?: string; ANTHROPIC_FALLBACKS?: string; ANTHROPIC_BASE_URL?: string}): ClaudeConfig {
-  const baseURL = env.ANTHROPIC_BASE_URL || '';
+  // Chave própria da Anthropic (sk-ant-...) vai sempre direto à API, mesmo se o gateway injetar sua URL.
+  const ownKey = /^sk-ant-/.test(env.ANTHROPIC_API_KEY || '');
+  const baseURL = ownKey ? '' : env.ANTHROPIC_BASE_URL || '';
   return {apiKey: env.ANTHROPIC_API_KEY || '', model: env.ANTHROPIC_MODEL || DEFAULT_MODEL, baseURL: baseURL || undefined, fallbacks: env.ANTHROPIC_FALLBACKS !== 'off' && !isGateway(baseURL)};
 }
 
