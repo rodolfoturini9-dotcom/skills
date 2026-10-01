@@ -11,8 +11,9 @@ import Evolucao from './screens/Evolucao.jsx';
 import Passagem from './screens/Passagem.jsx';
 import Prescricao from './screens/Prescricao.jsx';
 import PatientOverview from './screens/PatientOverview.jsx';
+import AIPanel from './screens/AIPanel.jsx';
 
-const TITLES = { prescricao: 'Prescrição e diluições', paciente: 'Painel do paciente', leitos: 'Mapa de leitos', ficha: 'Ficha diária · 6 dias', evolucao: 'Evolução médica', passagem: 'Passagem de plantão' };
+const TITLES = { prescricao: 'Prescrição e diluições', paciente: 'Painel do paciente', leitos: 'Mapa de leitos', ficha: 'Ficha diária · 6 dias', evolucao: 'Evolução médica', passagem: 'Passagem de plantão', ia: 'Inteligência artificial · Claude' };
 
 export default function App({initialRoute = "leitos"}) {
   return (
@@ -26,12 +27,13 @@ function Shell({initialRoute}) {
   const [route, setRoute] = useState(initialRoute);
   return (
     <Layout route={route} onNavigate={setRoute} title={TITLES[route]}>
-      {route === 'leitos' && <BedBoard onOpenFicha={() => setRoute('ficha')} onOpenPatient={() => setRoute('paciente')} />}
+      {route === 'leitos' && <BedBoard onOpenFicha={() => setRoute('ficha')} onOpenPatient={() => setRoute('paciente')} onOpenAI={() => setRoute('ia')} />}
       {route === 'paciente' && <PatientOverview onNavigate={setRoute} />}
       {route === 'prescricao' && <Prescricao onGoBeds={() => setRoute('leitos')} />}
       {route === 'ficha' && <FichaDiaria onGoBeds={() => setRoute('leitos')} />}
       {route === 'evolucao' && <Evolucao onGoBeds={() => setRoute('leitos')} />}
       {route === 'passagem' && <Passagem onGoBeds={() => setRoute('leitos')} />}
+      {route === 'ia' && <AIPanel />}
     </Layout>
   );
 }
@@ -43,7 +45,7 @@ export const STATUS_UI = {
   empty: { label: 'Vago', dot: 'bg-slate-300', ring: 'border-dashed border-slate-300' },
 };
 
-function BedBoard({ onOpenFicha, onOpenPatient }) {
+function BedBoard({ onOpenFicha, onOpenPatient, onOpenAI }) {
   const { state, actions, bedIds, census, exportBackup } = useICU();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -69,7 +71,7 @@ function BedBoard({ onOpenFicha, onOpenPatient }) {
       <div className="census-grid">
         {[['Ocupados',`${census.occupied} / ${census.total}`,'occupied','Leitos em uso'],['Críticos',census.critical,'critical','Marcação assistencial'],['Isolamento',census.isolation,'isolation','Leitos sinalizados'],['Pendências',pendingCount,'tasks','Ações do checklist']].map(([label,value,tone,detail])=><section key={label} className={`census-card ${tone}`}><span>{label}</span><strong>{value}</strong><small>{detail}</small></section>)}
       </div>
-      <div className="board-toolbar"><div><span className="eyebrow">VISÃO DA UNIDADE</span><h2>Mapa assistencial</h2></div><div className="backup-actions"><button className="secondary-btn" onClick={exportBackup}>Exportar backup</button><label className="secondary-btn">Importar<input type="file" accept="application/json,.json" onChange={onImport} className="sr-only" /></label></div></div>
+      <div className="board-toolbar"><div><span className="eyebrow">VISÃO DA UNIDADE</span><h2>Mapa assistencial</h2></div><div className="backup-actions"><button className="secondary-btn" onClick={onOpenAI}>IA</button><button className="secondary-btn" onClick={exportBackup}>Exportar backup</button><label className="secondary-btn">Importar<input type="file" accept="application/json,.json" onChange={onImport} className="sr-only" /></label></div></div>
       <details className="editor-card"><summary>Internações arquivadas</summary>{Object.values(state.archivedEpisodes||{}).map(p=><div key={p.episodeId} className="editor-actions"><span>{p.patientName}</span><button className="secondary-btn" onClick={()=>{actions.viewEpisode(p.patientId);onOpenPatient();}}>Consultar histórico</button><select aria-label={`Restaurar internação ${p.patientName}`} defaultValue="" onChange={e=>{if(e.target.value)actions.restoreEpisode(p.patientId,e.target.value);}}><option value="">Restaurar em leito livre</option>{bedIds.filter(id=>state.beds[id].status==='empty').map(id=><option key={id} value={id}>{id}</option>)}</select></div>)}</details>
       {importMsg && <p role="status" className="inline-notice">{importMsg}</p>}
       <div className="board-controls"><label className="search-input"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input aria-label="Buscar paciente ou leito" placeholder="Buscar paciente ou leito" value={query} onChange={e=>setQuery(e.target.value)}/></label><div className="filter-tabs" aria-label="Filtrar leitos">{[['all','Todos'],['occupied','Ocupados'],['critical','Críticos'],['isolation','Isolamento'],['empty','Vagos']].map(([id,label])=><button key={id} aria-pressed={filter===id} onClick={()=>setFilter(id)}>{label}</button>)}</div></div>

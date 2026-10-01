@@ -62,7 +62,7 @@ export async function handlePepApi(request:Request,db:Database){let phase='load'
  const before=loaded.state;phase='validate';let state=before;for(const action of body.actions){
   if(action.type===A.IMPORT_CHART){
    if(body.actions.length!==1||action.reviewVersion!==loaded.version||action.document?.review_token!==await fingerprint(state.beds[action.bedId]))return reply({error:'Os registros mudaram desde a revisão. Gere e revise novamente; nenhum campo foi aplicado.'},409);
-   if(!['records','external','openai'].includes(action.metadata?.source)||typeof action.metadata?.sourceText!=='string'||action.metadata.sourceText.length>120000)throw Error('Origem de importação inválida.');
+   if(!['records','external','claude','openai'].includes(action.metadata?.source)||typeof action.metadata?.sourceText!=='string'||action.metadata.sourceText.length>120000)throw Error('Origem de importação inválida.');
    action.metadata={source:action.metadata.source,sourceText:action.metadata.sourceText,author:'Usuário autenticado',at:new Date().toISOString()};
   }
   state=applyAction(state,action);

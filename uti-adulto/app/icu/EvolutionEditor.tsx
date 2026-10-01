@@ -1,4 +1,5 @@
 'use client';
+import {aiFetch} from '../pep/services/aiJobs.js';
 import {useEffect,useRef,useState} from 'react';
 import {useICU,latestDay,type Patient,type Evolution} from './ICUContext';
 import {fromBr} from './fichaModel';
@@ -25,7 +26,7 @@ export default function EvolutionEditor({patient}:{patient:Patient}){
  useEffect(()=>{const cleanup=()=>{delete document.body.dataset.evolutionPrint;setPrintExpanded(false)};window.addEventListener('afterprint',cleanup);return()=>{window.removeEventListener('afterprint',cleanup);delete document.body.dataset.evolutionPrint};},[]);
  const edit=(value:string)=>{setDraft(value);setGenerated(null);try{sessionStorage.setItem(`uti-evolution-draft:${patient.id}:${iso}`,value)}catch{}};
  async function generate(){if(!entry||!date)return;setBusy(true);setStatus(draft.trim()?'Organizando texto clínico com IA…':'Gerando evolução a partir da ficha salva…');try{
-  const response=await fetch('/api/evolution/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,day,version:entry.version,...(draft.trim()?{sourceText:draft}: {})})});
+  const response=await aiFetch('/api/evolution/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:patient.id,day,version:entry.version,...(draft.trim()?{sourceText:draft}: {})})});
   const value=await response.json() as Generated&{error?:string};if(!response.ok)throw Error(value.error||'Falha na geração.');
   if(!draft.trim()){setDraft(value.text);try{sessionStorage.setItem(`uti-evolution-draft:${patient.id}:${iso}`,value.text)}catch{}}
   setGenerated({...value,sourceText:draft.trim()||value.text});setStatus('Evolução organizada para revisão. O texto original permanece no campo de entrada.');

@@ -53,3 +53,11 @@
 - Impressão idêntica ao modelo "PEP UTI - Passagem de Plantão": A4 paisagem, @page 5 mm, área 286,5 × 199,5 mm, 3 leitos por página, colunas 12,6/13,5/16/15,3/22,8/19,8 %, fonte 8,5 px (checklist 8,3 px) reduzindo até 6,2 px; HMA impressa na coluna HMP como no modelo; card vazio "Sem ações registradas no checklist.". Comparação por pixels com o modelo renderizado: diferença < 0,01 % (suavização de fonte).
 - Diferença deliberada: conteúdo que não cabe mesmo em 6,2 px segue em página de CONTINUAÇÃO (o modelo cortaria o texto), com aviso na tela.
 - Prévia de impressão em tempo real na tela da Passagem.
+
+## Migração da IA: OpenAI → Claude (Anthropic) (01/10/2026)
+
+- Todas as chamadas `api.openai.com` (gpt-5-mini) substituídas pelo SDK oficial `@anthropic-ai/sdk` com `claude-opus-5-5`: saída JSON por structured outputs, `fallbacks: "default"` para recusas, tratamento de `refusal`/`max_tokens`, erros tipados traduzidos.
+- Correção estrutural: funções síncronas do Netlify têm limite de execução curto (≈10 s); as gerações de IA (antes com timeouts de 45–90 s) falhariam em produção. Agora rodam em função de background (até 15 min) com fila em `ai_jobs` (migração 0002), id assinado por HMAC e acompanhamento pelo navegador.
+- Ferramentas novas: assistente clínico por paciente (Claude com 7 ferramentas somente leitura, auditoria `ai.assistant`), painel de IA (status, teste, consumo, custo estimado), contabilização de tokens por geração.
+- Variáveis: `ANTHROPIC_API_KEY` (obrigatória para IA), `ANTHROPIC_MODEL`, `ANTHROPIC_FALLBACKS`. `OPENAI_API_KEY` deixou de ser usada.
+- Validação: 87 testes (API Anthropic simulada em SSE real pelo SDK), E2E local com funções empacotadas + Postgres + navegador. Chamada real à Anthropic depende da chave do usuário.

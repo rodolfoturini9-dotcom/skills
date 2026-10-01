@@ -54,3 +54,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline:3px 
 .passagem-preview #passagem-pages [data-generated-pages]{display:flex;flex-direction:column;gap:calc(10mm + 18px);padding:5mm}
 .passagem-preview #passagem-pages [data-generated-pages]>[data-page]{box-shadow:0 0 0 5mm #fff,0 0 0 calc(5mm + 1px) #c7d3dd,0 8px 30px rgba(24,50,77,.25)}
 @media print{html[data-print=passagem],html[data-print=passagem] body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#fff!important}.passagem-preview{zoom:1!important}.passagem-preview #passagem-pages [data-generated-pages]{display:block;padding:0}.passagem-preview #passagem-pages [data-generated-pages]>[data-page]{box-shadow:none}}
+
+/* IA (Claude): assistente clínico e painel de integração. */
+.ai-assistant{margin-top:22px}.ai-suggestions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.ai-suggestions .secondary-btn{font-size:13px;text-align:left}
+.ai-question{display:grid;gap:6px;font-size:14px;font-weight:600;margin:8px 0}.ai-question textarea{width:100%;border:1px solid #c7d3dd;border-radius:8px;padding:10px;font-size:16px;line-height:1.5;resize:vertical}
+.ai-answer{border:1px solid #d7e3ec;border-radius:10px;padding:14px;margin-top:14px;background:#f8fbfd}.ai-answer .ai-q{margin-bottom:8px}.ai-a p{margin:3px 0;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.ai-disclaimer{margin-top:12px;font-size:12px}
+.ai-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:12px 0}.ai-facts dt{font-size:12px;color:#5b6670}.ai-facts dd{font-weight:650}
+.ai-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;display:block;overflow-x:auto}.ai-table th,.ai-table td{text-align:left;padding:6px 8px;border-bottom:1px solid #e1e6ea;white-space:nowrap}.ai-list{display:grid;gap:6px;padding-left:18px;list-style:disc;margin:10px 0}
+.ai-answer .text-btn{margin-left:10px}

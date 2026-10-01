@@ -8,13 +8,20 @@ import { handleSheetApi, interpretSheet } from "./sheet-api";
 import {handlePepApi} from './pep-api';
 import {handlePepAI} from './pep-ai';
 import { generateEvolution } from "./evolution-api";
+import { handleAssistant } from "./assistant";
+import { configFromEnv, claudePing, ClaudeError, DEFAULT_MODEL } from "./claude";
+import { aiOperation, enqueueJob, readJob, runJob, usageReport } from "./ai-jobs";
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> | Response };
   DB: Database;
   ACCESS_PASSWORD: string;
   ACCESS_SESSION_SECRET: string;
-  OPENAI_API_KEY?: string;
+  ANTHROPIC_API_KEY?: string;
+  ANTHROPIC_MODEL?: string;
+  ANTHROPIC_FALLBACKS?: string;
+  // Dispara a execução de um job de IA em background (produção). Ausente: execução síncrona.
+  AI_DISPATCH?: (jobId: string, request: Request) => Promise<void>;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -105,6 +112,27 @@ interface ExecutionContext {
 // dangerouslyAllowSVG: true in next.config.js and uncomment below:
 // const imageConfig: ImageConfig = { dangerouslyAllowSVG: true };
 
+// Roteamento das APIs autenticadas (também usado pela função de background ao executar jobs de IA).
+export async function routeApi(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const ai = configFromEnv(env);
+  if(url.pathname === '/api/clinical') return handleClinicalApi(request,env.DB);
+  if(url.pathname === '/api/ficha/interpret' && request.method === 'POST') return interpretSheet(request,ai);
+  if(url.pathname === '/api/ficha') return handleSheetApi(request,env.DB);
+  if(url.pathname === '/api/evolution/generate') return generateEvolution(request,env.DB,ai);
+  if(url.pathname === '/api/pep')return handlePepApi(request,env.DB);
+  if(url.pathname === '/api/pep/ai')return handlePepAI(request,env.DB,ai);
+  if(url.pathname === '/api/ai/assistant')return handleAssistant(request,env.DB,ai);
+  if(url.pathname === '/api/ai/ping'){try{return Response.json(await claudePing(ai));}catch(e){return Response.json({error:e instanceof ClaudeError?e.message:'Falha no teste.'},{status:e instanceof ClaudeError?e.status:502});}}
+  if(url.pathname === '/api/icu') return handleIcuApi(request, env.DB, ai);
+  return url.pathname.startsWith('/api/') ? Response.json({error:'Rota não encontrada.'},{status:404}) : env.ASSETS.fetch(request);
+}
+
+// Executa um job de IA enfileirado (chamado pela função de background, já autenticada por assinatura).
+export async function runQueuedJob(jobId: string, env: Env) {
+  return runJob(env.DB, jobId, (request) => routeApi(request, env));
+}
+
 const baseWorker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -167,18 +195,24 @@ const baseWorker = {
 
     if (authConfigured && !(await hasValidSession(request, env))) return url.pathname.startsWith('/api/') ? Response.json({error:'Sessão expirada. Entre novamente.'},{status:401,headers:{'Cache-Control':'no-store'}}) : loginPage();
     if(url.pathname === '/api/session') return Response.json({ok:true},{headers:{'Cache-Control':'no-store'}});
-    if(url.pathname === '/api/clinical') return handleClinicalApi(request,env.DB);
-    if(url.pathname === '/api/ficha/interpret' && request.method === 'POST') return interpretSheet(request,env.OPENAI_API_KEY || '');
-    if(url.pathname === '/api/ficha') return handleSheetApi(request,env.DB);
-    if(url.pathname === '/api/evolution/generate') return generateEvolution(request,env.DB,env.OPENAI_API_KEY || '');
-
-    if(url.pathname === '/api/pep')return handlePepApi(request,env.DB);
-    if(url.pathname === '/api/pep/ai')return handlePepAI(request,env.DB,env.OPENAI_API_KEY||'');
-    if (url.pathname === "/api/icu") {
-      return handleIcuApi(request, env.DB, env.OPENAI_API_KEY || "");
+    if(url.pathname === '/api/ai/status' && request.method === 'GET') return Response.json({configured:Boolean(env.ANTHROPIC_API_KEY),provider:'Anthropic (Claude)',model:env.ANTHROPIC_MODEL||DEFAULT_MODEL,fallbacks:env.ANTHROPIC_FALLBACKS!=='off',async:Boolean(env.AI_DISPATCH)},{headers:{'Cache-Control':'no-store'}});
+    if(url.pathname === '/api/ai/usage' && request.method === 'GET') return Response.json(await usageReport(env.DB),{headers:{'Cache-Control':'no-store'}});
+    if(url.pathname === '/api/ai/job' && request.method === 'GET'){const job=await readJob(env.DB,url.searchParams.get('id')||'');return job?Response.json(job,{headers:{'Cache-Control':'no-store'}}):Response.json({error:'Execução não encontrada.'},{status:404});}
+    // Rotas de IA: em produção viram jobs em background (202 + id); sem despachante, executam direto.
+    if(request.method === 'POST'){
+      const bodyText=await request.text();
+      const operation=aiOperation(url.pathname,request.method,bodyText);
+      const rebuilt=new Request(request.url,{method:'POST',headers:request.headers,body:bodyText});
+      if(operation&&env.AI_DISPATCH){
+        if(!env.ANTHROPIC_API_KEY)return Response.json({error:'IA (Claude) não configurada: cadastre ANTHROPIC_API_KEY no Netlify. Enquanto isso, use o prompt externo.'},{status:503});
+        if(bodyText.length>9000000)return Response.json({error:'Entrada muito extensa.'},{status:413});
+        const id=await enqueueJob(env.DB,url.pathname,operation,bodyText);
+        await env.AI_DISPATCH(id,request);
+        return Response.json({jobId:id,status:'queued'},{status:202,headers:{'Cache-Control':'no-store'}});
+      }
+      return routeApi(rebuilt,env);
     }
-
-    return env.ASSETS.fetch(request);
+    return routeApi(request,env);
   },
 };
 

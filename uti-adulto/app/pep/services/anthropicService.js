@@ -1,4 +1,4 @@
-// Compatibilidade do nome do módulo do ZIP: produção utiliza o backend OpenAI existente.
+// Evolução por IA: geração no servidor com Claude (Anthropic), via fila de jobs.
 import {requestClinicalAI} from './productionAI.js';
 export * from './evolucaoSchema.js';
 export class EvolucaoError extends Error{}
