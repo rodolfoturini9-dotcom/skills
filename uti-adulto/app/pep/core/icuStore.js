@@ -1,5 +1,6 @@
 import {mergeDailyRecords,saveDailyEvolution} from './dailyHistory.js';
 import {applyChart} from './chartOrganization.js';
+import {evolutionFromText} from '../services/textEvolution.js';
 
 // Núcleo puro (sem React) do PEP-UTI: matriz canônica, estado, reducer, persistência e derivações.
 // Compartilhado por ICUContext.jsx e pelo protótipo navegável.
@@ -468,29 +469,72 @@ export function deriveSituacao(bed, day = referenceDay(bed)) {
 }
 
 // Objeto de passagem por leito (formato HRIVPassagem.pacientes[i]).
+// Lista de textos a partir de string (uma linha por item) ou array; descarta vazios e marcadores.
+const listOf = (v) => Array.isArray(v)
+  ? v.flatMap((x) => listOf(x))
+  : typeof v === 'string' ? v.split('\n').map((x) => x.replace(/^\s*[-•*]\s*/, '').trim()).filter(Boolean) : [];
+const firstFilled = (...lists) => lists.find((l) => l.length) || [];
+// Campos da evolução: payload estruturado e, na falta dele, as seções do texto registrado.
+function evolutionFields(evo) {
+  if (!evo) return {};
+  const p = evo.payload || {};
+  const t = evo.texto ? evolutionFromText(evo.texto).payload : {};
+  const pick = (a, b) => (listOf(a).length ? listOf(a) : listOf(b));
+  return {
+    diagnosticos: pick(p.diagnosticos_atuais, t.diagnosticos_atuais),
+    antecedentes: pick(p.antecedentes?.comorbidades, t.antecedentes?.comorbidades),
+    historia: firstFilled([...listOf(p.resumo_internacao), ...listOf(p.eventos_24h)], listOf(t.resumo_internacao)),
+    condutas: pick(p.condutas, t.condutas),
+    pendencias: pick(p.pendencias, t.pendencias),
+  };
+}
+
+// Preenchimento automático da passagem a partir dos registros, sem inventar conteúdo:
+// - evolução da data de referência da ficha (payload ou texto);
+// - HD e HMP, por serem estáveis, também da evolução anterior mais recente, do resumo da internação e do cadastro;
+// - CD/Metas e Pendências somente da data de referência (planos de outros dias não são transportados).
+export function autoHandoff(bed) {
+  const date = bed.dates?.[referenceDay(bed)] || '';
+  const records = mergeDailyRecords(bed);
+  const dayEvo = date ? records[date]?.evolution || (bed.evolucao?.clinicalDate === date ? bed.evolucao : null) : bed.evolucao || null;
+  const priorDate = Object.keys(records).filter((d) => records[d]?.evolution && (!date || d < date)).sort().pop();
+  const prior = evolutionFields(priorDate ? records[priorDate].evolution : null);
+  const day = evolutionFields(dayEvo);
+  const sum = bed.hospitalizationSummary?.sections || {};
+  const lp = bed.legacyPatient || {};
+  return {
+    data_ficha: date,
+    diagnosticos: firstFilled(day.diagnosticos || [], prior.diagnosticos || [], listOf(sum.diagnosticos), listOf(lp.diagnoses)),
+    antecedentes_historia: firstFilled(day.antecedentes || [], prior.antecedentes || [], listOf(sum.antecedentes), listOf(lp.medical_history)),
+    historia_atual: firstFilled(day.historia || [], listOf(sum.situacao_atual), listOf(sum.historia_admissao), listOf(lp.summary)),
+    condutas: day.condutas || [],
+    pendencias: day.pendencias || [],
+  };
+}
+
 export function deriveHandoff(bed) {
-  const date=bed.dates[referenceDay(bed)];
-  const evolution= date ? mergeDailyRecords(bed)[date]?.evolution || (bed.evolucao?.clinicalDate===date ? bed.evolucao : null) : null;
-  const p = evolution?.payload || {};
+  const auto = autoHandoff(bed);
   const h = bed.handoff;
-  const from = (key, fallback) => (h.overrides[key] || h[key]?.length ? h[key] : fallback || []);
+  const from = (key) => (h.overrides?.[key] || h[key]?.length ? h[key] : auto[key] || []);
+  const manual = (key) => !!(h.overrides?.[key] || h[key]?.length);
   const ageTxt = bed.age ? `${bed.age} ANOS` : '';
   const stay = [bed.dih && `DIH ${bed.dih}`, bed.diUti && `DI-UTI ${bed.diUti}`].filter(Boolean).join(' | ');
   return {
     leito: bed.bedId,
     nome: (bed.patientName || '').toUpperCase(),
     idade: ageTxt,
-    peso: bed.weight.value ? `${bed.weight.value} kg${bed.weight.isEstimated ? ' (estimado)' : ''}` : '',
+    peso: bed.weight?.value ? `${bed.weight.value} kg${bed.weight.isEstimated ? ' (estimado)' : ''}` : '',
     internacao: [stay, bed.admissionDate && `(${isoToBR(bed.admissionDate).slice(0, 5)})`].filter(Boolean).join(' '),
     status: bed.status,
-    diagnosticos: from('diagnosticos', p.diagnosticos_atuais),
-    antecedentes_historia: from(
-      'antecedentes_historia',
-      [p.antecedentes?.comorbidades].filter(Boolean)
-    ),
-    situacao: [...(from('historia_atual', [p.resumo_internacao, ...(p.eventos_24h || [])].filter(Boolean)).length ? [{titulo:'HMA',itens:from('historia_atual', [p.resumo_internacao, ...(p.eventos_24h || [])].filter(Boolean))}] : []), ...deriveSituacao(bed)],
-    condutas: from('condutas', p.condutas),
-    pendencias: from('pendencias', p.pendencias),
+    data_ficha: auto.data_ficha,
+    diagnosticos: from('diagnosticos'),
+    antecedentes_historia: from('antecedentes_historia'),
+    historia_atual: from('historia_atual'),
+    // Coluna HMA / SUPORTES do modelo: dados da ficha da data de referência.
+    situacao: deriveSituacao(bed),
+    condutas: from('condutas'),
+    pendencias: from('pendencias'),
+    origem: Object.fromEntries(['diagnosticos', 'antecedentes_historia', 'historia_atual', 'condutas', 'pendencias'].map((k) => [k, manual(k) ? 'manual' : (auto[k]?.length ? 'automatico' : 'vazio')])),
     checklist: h.checklist,
   };
 }

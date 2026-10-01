@@ -43,3 +43,13 @@
 - Integração real com OpenAI não testada (exige chave).
 - Gerações de IA longas podem exceder 55 s; nesse caso, gere por paciente ou use o prompt externo.
 - Autenticação por senha única compartilhada: não há identificação individual do autor nos registros (“Usuário autenticado”).
+
+## Passagem de plantão — preenchimento automático e impressão do modelo (01/10/2026)
+
+- Preenchimento automático (`autoHandoff` em `app/pep/core/icuStore.js`), sem inventar conteúdo; entrada manual sempre prevalece:
+  - HD, HMP e HMA: evolução da data de referência da ficha (payload estruturado ou seções do texto); HD e HMP também da evolução anterior mais recente, do resumo da internação e do cadastro.
+  - CD/Metas e Pendências: somente da evolução da data de referência (planos de outros dias não são transportados).
+  - HMA / SUPORTES: dados da ficha D-0 (suportes, infusões, ATB, dispositivos, dados).
+- Impressão idêntica ao modelo "PEP UTI - Passagem de Plantão": A4 paisagem, @page 5 mm, área 286,5 × 199,5 mm, 3 leitos por página, colunas 12,6/13,5/16/15,3/22,8/19,8 %, fonte 8,5 px (checklist 8,3 px) reduzindo até 6,2 px; HMA impressa na coluna HMP como no modelo; card vazio "Sem ações registradas no checklist.". Comparação por pixels com o modelo renderizado: diferença < 0,01 % (suavização de fonte).
+- Diferença deliberada: conteúdo que não cabe mesmo em 6,2 px segue em página de CONTINUAÇÃO (o modelo cortaria o texto), com aviso na tela.
+- Prévia de impressão em tempo real na tela da Passagem.

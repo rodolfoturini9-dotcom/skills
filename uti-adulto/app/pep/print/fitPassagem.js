@@ -1,6 +1,8 @@
-// Paginação medida em área A4 fixa: fontes legíveis e continuações, sem recorte.
-export const ROW_MAX=12, CARD_MAX=11, FONT_MIN=9.5;
-const overflow=b=>b.scrollHeight>b.clientHeight+1||b.scrollWidth>b.clientWidth+1;
+// Ajuste tipográfico do modelo da Passagem (A4 paisagem): cada linha [data-fit-row] e card [data-fit-card]
+// reduz a fonte em passos de 0,2px (8,5/8,3 → 6,2px) até nenhum [data-fit-box] transbordar.
+// Nada é ocultado: o que não couber em 6,2px segue em página de CONTINUAÇÃO e é informado em `failures`.
+export const ROW_MAX=8.5, CARD_MAX=8.3, FONT_MIN=6.2;
+const overflow=b=>b.scrollHeight>b.clientHeight+1;
 function shrink(el,key,max){let size=max;const boxes=[...el.querySelectorAll('[data-fit-box]')];el.style.setProperty(key,`${size}px`);while(size>FONT_MIN&&boxes.some(overflow)){size=Math.max(FONT_MIN,Math.round((size-.2)*10)/10);el.style.setProperty(key,`${size}px`);}return !boxes.some(overflow);}
 function emptyPage(source,output,continuation){const page=source.cloneNode(true);page.querySelectorAll('[data-fit-row],[data-fit-card]').forEach(e=>e.remove());if(!source.querySelector('[data-fit-card]'))page.querySelector('footer')?.remove();const list=page.children[1];Object.assign(list.style,{display:'flex',flexDirection:'column',flex:'1',minHeight:'0'});if(continuation){const tag=document.createElement('small');tag.textContent='CONTINUAÇÃO';tag.style.fontSize='10px';tag.style.lineHeight='1.1';page.querySelector('header').append(tag);}output.append(page);return {page,list};}
 function splitItem(item,sourcePage,output,card=false){

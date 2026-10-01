@@ -1,4 +1,4 @@
-import { deriveSituacao, referenceDay } from './icuStore.js';
+import { deriveSituacao, referenceDay, autoHandoff } from './icuStore.js';
 import { mergeDailyRecords } from './dailyHistory.js';
 export const HANDOFF_FIELDS = ['diagnosticos','antecedentes_historia','historia_atual','condutas','pendencias'];
 const lines = value => typeof value === 'string' ? value.split('\n').map(s=>s.trim()).filter(Boolean) : Array.isArray(value) ? value.filter(v=>typeof v==='string'&&v.trim()).map(v=>v.trim()) : [];
@@ -8,10 +8,9 @@ export function handoffSources(bed) {
  return {...(bed.patientId?{patient_id:bed.patientId,episode_id:bed.episodeId}:{}),leito:bed.bedId,nome:bed.patientName,data_ficha:date,ficha:deriveSituacao(bed,day),evolucao:evolution?.texto||'',payload:evolution?.payload||{},campos_manuais:Object.fromEntries(HANDOFF_FIELDS.map(k=>[k,bed.handoff?.[k]||[]]))};
 }
 export function automaticHandoff(bed) {
- const source=handoffSources(bed),p=source.payload;
- return {...(bed.patientId?{patient_id:bed.patientId,episode_id:bed.episodeId}:{}),leito:bed.bedId,nome:bed.patientName,data_ficha:source.data_ficha,
- diagnosticos:lines(p.diagnosticos_atuais),antecedentes_historia:lines(p.antecedentes?.comorbidades),
- historia_atual:[...lines(p.resumo_internacao),...lines(p.eventos_24h)],condutas:lines(p.condutas),pendencias:lines(p.pendencias)};
+ const auto=autoHandoff(bed);
+ return {...(bed.patientId?{patient_id:bed.patientId,episode_id:bed.episodeId}:{}),leito:bed.bedId,nome:bed.patientName,data_ficha:handoffSources(bed).data_ficha,
+ diagnosticos:auto.diagnosticos,antecedentes_historia:auto.antecedentes_historia,historia_atual:auto.historia_atual,condutas:auto.condutas,pendencias:auto.pendencias};
 }
 export function validateHandoffResponse(text,beds) {
  const raw=JSON.parse(text.trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''));

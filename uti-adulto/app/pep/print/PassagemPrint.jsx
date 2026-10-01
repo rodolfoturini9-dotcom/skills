@@ -1,12 +1,13 @@
 import React, { forwardRef } from 'react';
 import { chunk } from './fitPassagem.js';
 
-// Template anexado: A4 paisagem, área útil conservadora 290×203mm (@page margin 3mm), 3 pacientes/página, 6 colunas proporcionais.
+// Modelo "PEP UTI - Passagem de Plantão": A4 paisagem, @page margem 5 mm, área útil 286,5 × 199,5 mm,
+// 3 pacientes por página, 6 colunas proporcionais, checklist em página própria.
 const COLS = '12.6% 13.5% 16% 15.3% 22.8% 19.8%';
 const BLUE = '#9bc9e5';
 const S = {
-  page: { width: '290mm', height: '203mm', padding: 0, background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', breakAfter: 'page', pageBreakAfter: 'always', breakInside: 'avoid', fontFamily: 'Arial, Helvetica, sans-serif', color: '#172d43', boxSizing: 'border-box' },
-  title: { flex: 'none', padding: '1.5mm 2mm', minHeight: '12mm', borderRadius: '2mm', background: '#123b60', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.1mm', letterSpacing: '.025em', textAlign: 'center' },
+  page: { width: '286.5mm', height: '199.5mm', padding: 0, background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', breakAfter: 'page', pageBreakAfter: 'always', breakInside: 'avoid', fontFamily: 'Arial, Helvetica, sans-serif', color: '#172d43', boxSizing: 'border-box' },
+  title: { flex: 'none', minHeight: '12mm', borderRadius: '2mm', background: '#123b60', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', letterSpacing: '.025em', textAlign: 'center' },
   list: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '2mm', paddingTop: '2mm' },
   row: { flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: COLS, border: `1px solid ${BLUE}`, borderRadius: '1.6mm', overflow: 'hidden' },
   cell: { minWidth: 0, borderRight: `1px solid ${BLUE}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
@@ -35,13 +36,13 @@ function PatientRow({ p }) {
       <Cell label="LEITO / IDENTIFICAÇÃO" bodyStyle={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: 6, lineHeight: 1.19 }}>
         <div style={{ alignSelf: 'flex-start', background: '#165f8e', color: '#fff', borderRadius: 5, fontSize: 17, fontWeight: 800, lineHeight: 1, padding: '7px 8px' }}>{p.leito}</div>
         <div style={{ flex: 1, maxHeight: '25%' }} />
-        <div style={{ textTransform: 'uppercase', fontSize: 'calc(var(--row-font, 8.5px) + 2.2px)', fontWeight: 800, lineHeight: 1.15, marginBottom: 3, overflowWrap: 'anywhere' }}>{p.nome}</div>
-        {p.idade && <div style={{ fontSize: 'calc(var(--row-font, 8.5px) + .5px)', marginBottom: 5 }}>{p.idade}</div>}
-        {p.internacao && <div>{p.internacao}</div>}
+        <div style={{ textTransform: 'uppercase', fontSize: 'calc(var(--row-font, 8.5px) + 2.2px)', fontWeight: 800, lineHeight: 1.15, marginBottom: 3, overflowWrap: 'normal' }}>{p.nome}</div>
+        <div style={{ fontSize: 'calc(var(--row-font, 8.5px) + .5px)', marginBottom: 5 }}>{p.idade}</div>
+        <div>{p.internacao}</div>
         <div style={{ flex: 1, maxHeight: '25%' }} />
       </Cell>
       <Cell label="HD"><Bullets items={p.diagnosticos} /></Cell>
-      <Cell label="HMP"><Bullets items={p.antecedentes_historia} /></Cell>
+      <Cell label="HMP"><Bullets items={[...(p.antecedentes_historia || []), ...(p.historia_atual || [])]} /></Cell>
       <Cell label="HMA / SUPORTES">
         {(p.situacao || []).map((s) => (
           <React.Fragment key={s.titulo}><div style={S.sec}>{s.titulo}</div><Bullets items={s.itens} /></React.Fragment>
@@ -59,7 +60,7 @@ function CheckCard({ p }) {
     <article data-fit-card={`UTI-${p.leito}`} style={{ minHeight: 0, border: `1px solid ${BLUE}`, borderRadius: '1.6mm', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 'none', background: '#155c83', color: '#fff', padding: '4px 7px', fontSize: 10.5, lineHeight: 1.1, fontWeight: 800 }}>{p.nome} | UTI-{p.leito}</div>
       <div data-fit-box style={{ flex: 1, minHeight: 0, padding: '3px 5px', fontSize: 'var(--check-font, 8.3px)', lineHeight: 1.12 }}>
-        
+        {!items.length && <div style={{ color: '#556b79', fontStyle: 'italic', padding: 6 }}>Sem ações registradas no checklist.</div>}
         {items.map((c, i) => {
           const done = c.status === 'realizado';
           return (
@@ -86,9 +87,9 @@ const PassagemPrint = forwardRef(function PassagemPrint({ passagem }, ref) {
         </section>
       ))}
       <section style={{ ...S.page, breakAfter: 'auto', pageBreakAfter: 'auto' }} data-page>
-        <header style={{ ...S.title, minHeight: '14mm' }}>
+        <header style={{ ...S.title, minHeight: '14mm', flexDirection: 'column', gap: '1.1mm' }}>
           <b style={{ fontSize: 18, lineHeight: 1.04 }}>PASSAGEM DE PLANTÃO - CHECKLIST DE PLANOS E METAS</b>
-          <small style={{ fontSize: 10, lineHeight: 1.1 }}>{unidade} | {data} | Situação das ações até o momento da passagem</small>
+          <small style={{ fontSize: 10, letterSpacing: 0 }}>{unidade} | {data} | Situação das ações até o momento da passagem</small>
         </header>
         <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: `repeat(${Math.max(1, Math.ceil(pacientes.length / 2))}, minmax(0,1fr))`, gap: '2mm', paddingTop: '2mm' }}>
           {pacientes.map((p) => <CheckCard key={p.leito} p={p} />)}

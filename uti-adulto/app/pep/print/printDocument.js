@@ -4,7 +4,7 @@ export const PAGE_RULES = {
   ficha: '@page { size: A4 portrait; margin: 6mm; }',
   prescricao: '@page { size: A4 portrait; margin: 12mm; }',
   evolucao: '@page { size: A4 portrait; margin: 5mm; }',
-  passagem: '@page { size: A4 landscape; margin: 3mm; }',
+  passagem: '@page { size: A4 landscape; margin: 5mm; }',
 };
 
 export function printDocument(id, { before, after } = {}) {

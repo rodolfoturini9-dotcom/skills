@@ -9,7 +9,7 @@ import { printDocument } from '../print/printDocument.js';
 const LISTS = [
   ['diagnosticos', 'HD · Diagnósticos'],
   ['antecedentes_historia', 'HMP · Antecedentes e história'],
-  ['historia_atual', 'HMA · História e intercorrências'],
+  ['historia_atual', 'HMA · História e intercorrências (impressa na coluna HMP)'],
   ['condutas', 'CD / Metas'],
   ['pendencias', 'Pendências'],
 ];
@@ -20,6 +20,12 @@ export default function Passagem({ onGoBeds }) {
   const [failures, setFailures] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [openBed, setOpenBed] = useState(null);
+  const [preview, setPreview] = useState(false);
+  const [zoom, setZoom] = useState(0.62);
+  useEffect(() => {
+    const calc = () => setZoom(Math.max(0.3, Math.min(1, (Math.min(window.innerWidth, 1180) - 48) / 1160)));
+    calc(); window.addEventListener('resize', calc); return () => window.removeEventListener('resize', calc);
+  }, []);
   const { pacientes, resumo } = passagem;
 
   // Reajusta a cada mudança de dados: o aviso de excesso aparece antes de imprimir.
@@ -50,19 +56,20 @@ export default function Passagem({ onGoBeds }) {
         <div className="flex items-baseline justify-between gap-3">
           <div>
             <div className="text-[15px] font-bold text-[#123b60]">{pacientes.length} pacientes · {pages} {pages > 1 ? 'páginas' : 'página'} incluindo checklist</div>
-            <div className="text-sm text-slate-500">A4 paisagem · margens de 3 mm · até 3 leitos por página</div>
+            <div className="text-sm text-slate-500">A4 paisagem · 3 leitos por página · preenchimento automático pelos registros</div>
           </div>
           <div className="text-right text-sm"><b className="text-[#177b49]">{resumo.realizados}</b>/{resumo.total} ações · {resumo.pct}%</div>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-[#fbe9d0]"><div className="h-full bg-[#177b49]" style={{ width: `${resumo.pct}%` }} /></div>
         <button type="button" onClick={imprimir} className="min-h-12 rounded-xl bg-[#123b60] text-base font-bold text-white active:bg-[#0d2c48]">Imprimir A4 paisagem</button>
+        <button type="button" onClick={() => setPreview((v) => !v)} aria-pressed={preview} className="min-h-11 rounded-xl border border-[#9bc9e5] bg-white text-base font-bold text-[#15618a]">{preview ? 'Ocultar prévia de impressão' : 'Mostrar prévia de impressão'}</button>
       </section>
 
       <HandoffGenerator />
 
       {!!failures.length && (
         <div role="status" className="rounded-xl border border-[#e6c08e] bg-[#fdf3e3] p-3 text-sm text-[#7a4600] print:hidden">
-          <b>Conteúdo extenso:</b> {failures.join('; ')}. A impressão usará páginas adicionais para preservar o texto.
+          <b>Conteúdo acima da capacidade A4 mesmo em 6,2px:</b> {failures.join('; ')}. Reduza o texto antes de imprimir; sem redução, o excedente sai em página de continuação.
         </div>
       )}
 
@@ -76,7 +83,7 @@ export default function Passagem({ onGoBeds }) {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-base font-bold">{p.nome}</span>
                   <span className="block truncate text-[13px] text-slate-500">{[p.idade, p.internacao].filter(Boolean).join(' · ')}</span>
-                  <span className="mt-0.5 block text-[13px] text-slate-600">HD {p.diagnosticos.length} · CD {p.condutas.length} · Pend. {p.pendencias.length}</span>
+                  <span className="mt-0.5 block text-[13px] text-slate-600">HD {p.diagnosticos.length} · CD {p.condutas.length} · Pend. {p.pendencias.length}{Object.values(p.origem || {}).includes('automatico') ? ' · automático' : ''}</span>
                 </span>
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-[13px] font-bold ${p.checklist.length && done === p.checklist.length ? 'bg-[#e3f3ea] text-[#177b49]' : 'bg-[#fdf3e3] text-[#ad6300]'}`}>{done}/{p.checklist.length}</span>
               </button>
@@ -85,8 +92,9 @@ export default function Passagem({ onGoBeds }) {
         })}
       </ul>
 
-      {/* Folhas medidas fora da tela (fit precisa de layout real); visíveis somente na impressão. */}
-      <div aria-hidden="true" className="print-measure">
+      {/* Folhas medidas com layout real; fora da tela, exceto na prévia (zoom) e na impressão. */}
+      {preview && <div className="text-sm text-slate-600 print:hidden"><b className="text-[#123b60]">Prévia de impressão</b> · A4 paisagem · área útil 286,5 × 199,5 mm (margem 5 mm) · atualiza em tempo real</div>}
+      <div aria-hidden={!preview} className={`print-measure${preview ? ' passagem-preview' : ''}`} style={{ '--preview-zoom': zoom }}>
         <PassagemPrint ref={printRef} passagem={passagem} />
       </div>
 
@@ -146,7 +154,7 @@ function BedHandoffSheet({ bedId, onClose }) {
 
           {!!p.situacao.length && (
             <section>
-              <h3 className="text-sm font-bold uppercase tracking-wide text-[#15618a]">HMA / Suportes <span className="font-normal normal-case text-slate-500">· evolução e ficha de referência</span></h3>
+              <h3 className="text-sm font-bold uppercase tracking-wide text-[#15618a]">HMA / Suportes <span className="font-normal normal-case text-slate-500">· da ficha D-0</span></h3>
               <div className="mt-1.5 grid gap-1.5 rounded-xl bg-[#f1f6fa] p-3 text-[15px]">
                 {p.situacao.map((s) => <div key={s.titulo}><b className="text-[#123b60]">{s.titulo}:</b> {s.itens.join(' · ')}</div>)}
               </div>
