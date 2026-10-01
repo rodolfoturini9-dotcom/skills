@@ -18,6 +18,7 @@ export default function Passagem({ onGoBeds }) {
   const { passagem } = useICU();
   const printRef = useRef(null);
   const [failures, setFailures] = useState([]);
+  const [reduced, setReduced] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [openBed, setOpenBed] = useState(null);
   const [preview, setPreview] = useState(false);
@@ -30,7 +31,7 @@ export default function Passagem({ onGoBeds }) {
 
   // Reajusta a cada mudança de dados: o aviso de excesso aparece antes de imprimir.
   useLayoutEffect(() => {
-    if (printRef.current) { const fit=fitPassagem(printRef.current); setFailures(fit.failures);setPageCount(fit.pages); }
+    if (printRef.current) { const fit=fitPassagem(printRef.current); setFailures(fit.failures);setReduced(fit.reduced);setPageCount(fit.pages); }
   }, [passagem]);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function Passagem({ onGoBeds }) {
       <section className="grid gap-3 rounded-2xl border border-[#c7d3dd] bg-white p-4 print:hidden">
         <div className="flex items-baseline justify-between gap-3">
           <div>
-            <div className="text-[15px] font-bold text-[#123b60]">{pacientes.length} pacientes · {pages} {pages > 1 ? 'páginas' : 'página'} incluindo checklist</div>
+            <div className="text-[15px] font-bold text-[#123b60]">{pacientes.length} {pacientes.length > 1 ? 'pacientes' : 'paciente'} · {Math.max(0, pages - 1)} {pages - 1 > 1 ? 'páginas' : 'página'} + checklist</div>
             <div className="text-sm text-slate-500">A4 paisagem · 3 leitos por página · preenchimento automático pelos registros</div>
           </div>
           <div className="text-right text-sm"><b className="text-[#177b49]">{resumo.realizados}</b>/{resumo.total} ações · {resumo.pct}%</div>
@@ -69,7 +70,12 @@ export default function Passagem({ onGoBeds }) {
 
       {!!failures.length && (
         <div role="status" className="rounded-xl border border-[#e6c08e] bg-[#fdf3e3] p-3 text-sm text-[#7a4600] print:hidden">
-          <b>Conteúdo acima da capacidade A4 mesmo em 6,2px:</b> {failures.join('; ')}. Reduza o texto antes de imprimir; sem redução, o excedente sai em página de continuação.
+          <b>Conteúdo acima da capacidade do leito na folha (3 por página), mesmo em 4,6px:</b> {failures.join('; ')}. O excedente não aparece na impressão; reduza o texto desses itens antes de imprimir.
+        </div>
+      )}
+      {!!reduced.length && !failures.length && (
+        <div role="status" className="rounded-xl border border-[#c7d3dd] bg-[#f1f6fa] p-3 text-sm text-slate-600 print:hidden">
+          Fonte reduzida abaixo de 6,2px para manter 3 leitos por página: {reduced.join('; ')}.
         </div>
       )}
 

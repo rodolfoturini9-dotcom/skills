@@ -1,32 +1,27 @@
-// Ajuste tipográfico do modelo da Passagem (A4 paisagem): cada linha [data-fit-row] e card [data-fit-card]
-// reduz a fonte em passos de 0,2px (8,5/8,3 → 6,2px) até nenhum [data-fit-box] transbordar.
-// Nada é ocultado: o que não couber em 6,2px segue em página de CONTINUAÇÃO e é informado em `failures`.
-export const ROW_MAX=8.5, CARD_MAX=8.3, FONT_MIN=6.2;
+// Ajuste tipográfico do modelo da Passagem (A4 paisagem), com paginação FIXA do modelo:
+// 3 leitos por página (até 10 leitos = 4 páginas) + 1 página de checklist com todos os pacientes.
+// 1) Cada linha [data-fit-row] / card [data-fit-card] reduz a fonte em passos de 0,2px (8,5/8,3 → 6,2px).
+// 2) Coluna que ainda transborde reduz só a própria fonte até FONT_FLOOR, sem alterar o layout.
+// 3) O que não couber nem em FONT_FLOOR é informado em `failures` (nenhuma página extra é criada).
+export const ROW_MAX=8.5, CARD_MAX=8.3, FONT_MIN=6.2, FONT_FLOOR=4.6;
 const overflow=b=>b.scrollHeight>b.clientHeight+1;
-function shrink(el,key,max){let size=max;const boxes=[...el.querySelectorAll('[data-fit-box]')];el.style.setProperty(key,`${size}px`);while(size>FONT_MIN&&boxes.some(overflow)){size=Math.max(FONT_MIN,Math.round((size-.2)*10)/10);el.style.setProperty(key,`${size}px`);}return !boxes.some(overflow);}
-function emptyPage(source,output,continuation){const page=source.cloneNode(true);page.querySelectorAll('[data-fit-row],[data-fit-card]').forEach(e=>e.remove());if(!source.querySelector('[data-fit-card]'))page.querySelector('footer')?.remove();const list=page.children[1];Object.assign(list.style,{display:'flex',flexDirection:'column',flex:'1',minHeight:'0'});if(continuation){const tag=document.createElement('small');tag.textContent='CONTINUAÇÃO';tag.style.fontSize='10px';tag.style.lineHeight='1.1';page.querySelector('header').append(tag);}output.append(page);return {page,list};}
-function splitItem(item,sourcePage,output,card=false){
- const queues=[...item.querySelectorAll('[data-fit-box]')].map(box=>[...box.children].map(n=>n.cloneNode(true)));let count=0;
- while(queues.some(q=>q.length)){
-  const {page,list}=emptyPage(sourcePage,output,count>0);const clone=item.cloneNode(true);Object.assign(clone.style,{flex:'1',minHeight:'0'});clone.style.setProperty(card?'--check-font':'--row-font',`${FONT_MIN}px`);list.append(clone);
-  const boxes=[...clone.querySelectorAll('[data-fit-box]')];boxes.forEach(b=>b.replaceChildren());if(!card&&count>0&&!queues[0].length){boxes[0].append(...[...item.querySelector('[data-fit-box]').children].map(n=>n.cloneNode(true)));}let progressed=false;
-  boxes.forEach((box,i)=>{const queue=queues[i];while(queue.length){const node=queue[0];box.append(node.cloneNode(true));if(!overflow(box)){queue.shift();progressed=true;continue;}box.lastChild.remove();
-   const text=node.textContent;let low=0,high=text.length,best=0;const part=node.cloneNode(false);Object.assign(part.style,{display:'block',overflowWrap:'anywhere',whiteSpace:'pre-wrap'});box.append(part);
-   while(low<=high){const mid=Math.floor((low+high)/2);part.textContent=text.slice(0,mid);if(!overflow(box)){best=mid;low=mid+1;}else high=mid-1;}
-   if(best){const space=text.lastIndexOf(' ',best);if(space>best*.65)best=space+1;part.textContent=text.slice(0,best);node.textContent=text.slice(best);progressed=true;if(!node.textContent)queue.shift();}else part.remove();break;
-  }});
-  if(!progressed){page.remove();throw new Error('Não foi possível paginar o conteúdo. Revise o template antes de imprimir.');}count++;
- }
+const round=n=>Math.round(n*10)/10;
+function shrink(el,key,max,min,boxes){let size=max;el.style.setProperty(key,`${size}px`);while(size>min&&boxes.some(overflow)){size=Math.max(min,round(size-.2));el.style.setProperty(key,`${size}px`);}return size;}
+function fit(item,key,max){
+ const boxes=[...item.querySelectorAll('[data-fit-box]')];
+ const size=shrink(item,key,max,FONT_MIN,boxes);
+ // A variável redefinida na própria coluna vale para os títulos internos (calc(var(--row-font) + …)).
+ for(const box of boxes.filter(overflow))shrink(box,key,size,FONT_FLOOR,[box]);
+ return {size,ok:!boxes.some(overflow),reduced:boxes.some(b=>b.style.getPropertyValue(key))};
 }
 export function fitPassagem(root){
- if(!root)return {failures:[],sizes:{},pages:0};const originals=[...root.children].filter(e=>e.hasAttribute('data-page'));
+ if(!root)return {failures:[],reduced:[],sizes:{},pages:0};const originals=[...root.children].filter(e=>e.hasAttribute('data-page'));
  root.querySelector('[data-generated-pages]')?.remove();originals.forEach(p=>p.style.display='flex');
- const output=document.createElement('div');output.dataset.generatedPages='';root.append(output);const failures=[],sizes={};
- for(const sourcePage of originals){const clone=sourcePage.cloneNode(true);output.append(clone);const rows=[...clone.querySelectorAll('[data-fit-row]')],cards=[...clone.querySelectorAll('[data-fit-card]')];const badRows=rows.filter(r=>!shrink(r,'--row-font',ROW_MAX)),badCards=cards.filter(r=>!shrink(r,'--check-font',CARD_MAX));
-  if(badRows.length){clone.remove();for(const row of rows){if(badRows.includes(row)){failures.push(row.dataset.fitRow);splitItem(row,sourcePage,output);}else{const {list}=emptyPage(sourcePage,output,false);list.append(row);}}}
-  else if(badCards.length){clone.remove();for(const card of cards){if(badCards.includes(card)){failures.push(`Checklist ${card.dataset.fitCard}`);splitItem(card,sourcePage,output,true);}else{const {list}=emptyPage(sourcePage,output,false);card.style.flex='1';list.append(card);}}}
-  for(const row of rows)sizes[row.dataset.fitRow]=row.style.getPropertyValue('--row-font');
+ const output=document.createElement('div');output.dataset.generatedPages='';root.append(output);const failures=[],reduced=[],sizes={};
+ for(const source of originals){const page=source.cloneNode(true);output.append(page);
+  for(const row of page.querySelectorAll('[data-fit-row]')){const r=fit(row,'--row-font',ROW_MAX);sizes[row.dataset.fitRow]=`${r.size}px`;if(!r.ok)failures.push(row.dataset.fitRow);else if(r.reduced)reduced.push(row.dataset.fitRow);}
+  for(const card of page.querySelectorAll('[data-fit-card]')){const label=`Checklist ${card.dataset.fitCard}`,r=fit(card,'--check-font',CARD_MAX);if(!r.ok)failures.push(label);else if(r.reduced)reduced.push(label);}
  }
- originals.forEach(p=>p.style.display='none');const pages=[...output.children];pages.forEach((p,i)=>{p.style.breakAfter=i===pages.length-1?'auto':'page';p.style.pageBreakAfter=i===pages.length-1?'auto':'always';});return {failures,sizes,pages:pages.length};
+ originals.forEach(p=>p.style.display='none');const pages=[...output.children];pages.forEach((p,i)=>{p.style.breakAfter=i===pages.length-1?'auto':'page';p.style.pageBreakAfter=i===pages.length-1?'auto':'always';});return {failures,reduced,sizes,pages:pages.length};
 }
 export const chunk=(arr,n=3)=>Array.from({length:Math.ceil(arr.length/n)},(_,i)=>arr.slice(i*n,i*n+n));
