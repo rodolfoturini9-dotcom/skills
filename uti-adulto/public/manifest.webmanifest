@@ -1,0 +1,12 @@
+{
+  "name": "UTI Adulto — Hospital Regional de Ivaiporã",
+  "short_name": "UTI HRIV",
+  "lang": "pt-BR",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f6f7",
+  "theme_color": "#123b46",
+  "icons": [{"src":"/uti-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}

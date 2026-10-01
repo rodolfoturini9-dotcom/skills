@@ -1,0 +1,31 @@
+{
+  "name": "uti-adulto-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview",
+    "db:migrate": "node --env-file=.env scripts/migrate-netlify.mjs",
+    "test:netlify": "node --import tsx --test tests/netlify-adapter.test.mjs",
+    "deploy": "npx netlify deploy --build --prod"
+  },
+  "dependencies": {
+    "@libsql/client": "0.18.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.2.1",
+    "@vitejs/plugin-react": "6.0.2",
+    "esbuild": "0.28.2",
+    "tailwindcss": "4.2.1",
+    "tsx": "^4.20.0",
+    "typescript": "5.9.3",
+    "vite": "8.0.13"
+  }
+}

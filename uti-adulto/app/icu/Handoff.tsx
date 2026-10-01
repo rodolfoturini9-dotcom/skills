@@ -1,0 +1,40 @@
+'use client';
+import {useEffect,useRef,useState} from 'react';
+import {useICU,type HandoffEntry} from './ICUContext';
+import {FICHA_ROWS} from './fichaModel';
+import BottomSheet from './BottomSheet';
+import PrintPortal from './PrintPortal';
+
+function pending(e:HandoffEntry){return [e.pendingText,...e.goals.filter(g=>!g.completed).map(g=>g.text),...e.tasks.filter(t=>!t.completed).map(t=>t.text)].filter(Boolean)}
+function done(e:HandoffEntry){return [...e.goals.filter(g=>g.completed).map(g=>g.text),...e.tasks.filter(t=>t.completed).map(t=>t.text)]}
+function support(e:HandoffEntry){const current=e.day;const day=e.sheet?.dates[current]||'';const clinical=[19,20,21,22,3,7,12,13,14,15,16,34,35,36].flatMap(row=>[0,1].map(slot=>{const value=e.sheet?.cells[`${current}:${row}:${slot}`]?.trim();return value?`${FICHA_ROWS[row].labels[slot]||FICHA_ROWS[row].labels[0]||FICHA_ROWS[row].id}: ${value}`:''}).filter(Boolean));return [day&&`Ficha ${day}`,e.history,e.support,...clinical].filter(Boolean).join(' · ')}
+const headers=['LEITO / IDENTIFICAÇÃO','HD','HMP','HMA / SUPORTES','CD / METAS','PENDÊNCIAS'];
+export default function Handoff(){const {handoff,mutate}=useICU(),[status,setStatus]=useState(''),[selected,setSelected]=useState<string|null>(null),[overflowBeds,setOverflowBeds]=useState<string[]>([]),root=useRef<HTMLDivElement>(null);
+ const total=handoff.reduce((n,e)=>n+e.tasks.length+e.goals.length,0),doneCount=handoff.reduce((n,e)=>n+done(e).length,0);
+ const pages=Array.from({length:Math.ceil(handoff.length/3)},(_,i)=>handoff.slice(i*3,i*3+3));
+ async function toggle(kind:'task'|'goal',id:number,completed:boolean){try{await mutate(kind==='task'?{action:'toggleTask',id,completed}:{action:'toggleDailyGoal',id,completed});}catch(e){setStatus(e instanceof Error?e.message:'Falha ao atualizar.')}}
+ function fit(){const failure:string[]=[];const container=root.current;if(!container)return ['Relatório indisponível'];
+  for(const row of container.querySelectorAll<HTMLElement>('.icu-handoff-row')){
+   const cells=Array.from(row.querySelectorAll<HTMLElement>('.icu-handoff-cell-content'));let size=8.5;row.style.setProperty('--row-font',`${size}px`);
+   while(size>6.2&&cells.some(el=>el.scrollHeight>el.clientHeight+1)){size=Math.max(6.2,Math.round((size-.2)*10)/10);row.style.setProperty('--row-font',`${size}px`)}
+   if(cells.some(el=>el.scrollHeight>el.clientHeight+1))failure.push(row.getAttribute('data-bed')||'leito');
+  }
+  for(const card of container.querySelectorAll<HTMLElement>('.icu-check-print-card')){
+   const el=card.querySelector<HTMLElement>('.icu-check-print-body');if(!el)continue;let size=8.3;card.style.setProperty('--check-font',`${size}px`);
+   while(size>6.2&&el.scrollHeight>el.clientHeight+1){size=Math.max(6.2,Math.round((size-.2)*10)/10);card.style.setProperty('--check-font',`${size}px`)}
+   if(el.scrollHeight>el.clientHeight+1)failure.push(card.getAttribute('data-bed')||'checklist');
+  }
+  return failure;
+ }
+ useEffect(()=>{const before=()=>{if(document.body.dataset.handoffPrint==='true')fit()};const after=()=>{delete document.body.dataset.handoffPrint};window.addEventListener('beforeprint',before);window.addEventListener('afterprint',after);return()=>{window.removeEventListener('beforeprint',before);window.removeEventListener('afterprint',after);after()};});
+ async function print(){setStatus('Preparando páginas A4…');await new Promise<void>(r=>requestAnimationFrame(()=>r()));const failures=fit();setOverflowBeds(failures);if(failures.length)setStatus(`Texto extenso nos leitos ${failures.join(', ')}: conteúdo integral incluído em páginas complementares.`);else setStatus('Passagem pronta para impressão.');await new Promise<void>(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r())));document.body.dataset.handoffPrint='true';window.print()}
+ return <section className="icu-handoff"><div className="icu-title"><div><span className="icu-overline">RESUMO OPERACIONAL</span><h1>Passagem de plantão</h1><p>Dados registrados nos leitos; confira a atualidade.</p></div><button className="icu-print-button" onClick={()=>void print()}>Imprimir A4</button></div>
+ <div className="icu-handoff-summary"><div><strong>{handoff.length}</strong><span>leitos ativos</span></div><div><strong>{total-doneCount}</strong><span>pendências</span></div><div><strong>{total?Math.round(doneCount/total*100):0}%</strong><span>realizado</span></div></div>
+ <div className="icu-handoff-list">{handoff.map(e=><button type="button" className="icu-handoff-item" key={e.patient.id} onClick={()=>setSelected(e.patient.id)}><span className="icu-bed-number">{e.patient.bed}</span><span className="icu-bed-text"><strong>{e.patient.name}</strong><small>{e.diagnoses||'Hipótese diagnóstica não registrada'}</small><small>{pending(e).length} pendência(s) · {done(e).length} realizado(s)</small></span><span className="icu-bed-end" aria-hidden="true">›</span></button>)}</div>
+ <BottomSheet open={selected!==null} title={`Leito ${handoff.find(e=>e.patient.id===selected)?.patient.bed||''} · Passagem`} onClose={()=>setSelected(null)}>{handoff.filter(e=>e.patient.id===selected).map(e=><div className="icu-handoff-detail" key={e.patient.id}><h3>{e.patient.name}</h3>{e.diagnoses&&<p><b>HD:</b> {e.diagnoses}</p>}{e.antecedents&&<p><b>HMP:</b> {e.antecedents}</p>}{e.history&&<p><b>Resumo:</b> {e.history}</p>}{e.support&&<p><b>Suportes:</b> {e.support}</p>}{e.plan&&<p><b>Metas:</b> {e.plan}</p>}<div className="icu-checklist">{e.goals.map(g=><label key={`g${g.id}`}><input type="checkbox" checked={g.completed} onChange={()=>void toggle('goal',g.id,!g.completed)}/><span>{g.text}</span></label>)}{e.tasks.map(t=><label key={`t${t.id}`}><input type="checkbox" checked={t.completed} onChange={()=>void toggle('task',t.id,!t.completed)}/><span>{t.text}</span></label>)}</div></div>)}</BottomSheet>
+ {!handoff.length&&<p>Nenhum paciente ativo.</p>}<div className="icu-operational">Resumo operacional: {doneCount}/{total} itens realizados ({total?Math.round(doneCount/total*100):0}%).</div><p role="status" className="icu-save-status">{status}</p>
+ <PrintPortal kind="handoff"><div className="icu-handoff-print" ref={root}>{pages.map((group,i)=><section className="icu-handoff-print-page" key={i}><h2>HOSPITAL REGIONAL DE IVAIPORÃ · PASSAGEM DE PLANTÃO</h2><div className="icu-handoff-print-head">{headers.map(h=><strong key={h}>{h}</strong>)}</div><div className="icu-handoff-print-rows">{group.map(e=><div className="icu-handoff-row" data-bed={e.patient.bed} key={e.patient.id}>{[`${e.patient.bed}\n${e.patient.name}`,e.diagnoses,e.antecedents,support(e),e.plan,pending(e).join(' · ')].map((value,j)=><div className="icu-handoff-print-cell" key={j}><div className="icu-handoff-cell-content">{value}</div></div>)}</div>)}</div><footer>Página {i+1} de {pages.length+1} · {group.length} paciente(s)</footer></section>)}
+ <section className="icu-handoff-print-page icu-handoff-checklist-print"><h2>CHECKLIST OPERACIONAL · UTI ADULTO</h2><div className="icu-check-print-grid">{handoff.map(e=><article className="icu-check-print-card" data-bed={e.patient.bed} key={e.patient.id}><strong>LEITO {e.patient.bed} · {e.patient.name}</strong><div className="icu-check-print-body"><p className="done"><b>REALIZADO:</b> {done(e).join(' · ')}</p><p className="pending"><b>PENDENTE:</b> {pending(e).join(' · ')}</p></div></article>)}</div><footer>RESUMO OPERACIONAL · {doneCount}/{total} realizados ({total?Math.round(doneCount/total*100):0}%) · {total-doneCount} pendentes ({total?Math.round((total-doneCount)/total*100):0}%)</footer></section></div>
+ {overflowBeds.length>0&&<div className="icu-handoff-appendix"><h2>PASSAGEM DE PLANTÃO · COMPLEMENTO INTEGRAL</h2>{handoff.filter(e=>overflowBeds.includes(e.patient.bed)).map(e=><section key={e.patient.id}><h3>Leito {e.patient.bed} · {e.patient.name}</h3>{headers.slice(1).map((label,i)=><div key={label}><strong>{label}</strong><p>{[e.diagnoses,e.antecedents,support(e),e.plan,pending(e).join(' · ')][i]}</p></div>)}<div><strong>REALIZADO</strong><p>{done(e).join(' · ')}</p></div></section>)}</div>}</PrintPortal>
+ </section>;
+}

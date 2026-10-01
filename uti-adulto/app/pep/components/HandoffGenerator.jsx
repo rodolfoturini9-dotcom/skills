@@ -1,0 +1,24 @@
+import React,{useEffect,useRef,useState} from 'react';
+import {useICU} from '../context/ICUContext.jsx';
+import {automaticHandoff,handoffPrompt,handoffSources,validateHandoffResponse,HANDOFF_FIELDS} from '../core/handoffGeneration.js';
+import {generateHandoffAI} from '../services/handoffService.js';
+import {copyText} from '../core/prescricao.js';
+const labels=['HD','HMP','HMA','CD / METAS','PENDÊNCIAS'];
+export function HandoffGenerator(){
+ const {state,actions,bedIds}=useICU();const [selected,setSelected]=useState('todos'),[response,setResponse]=useState(''),[preview,setPreview]=useState(null),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
+ const abort=useRef(null);useEffect(()=>()=>abort.current?.abort(),[]);
+ const beds=bedIds.map(id=>state.beds[id]).filter(b=>b.status!=='empty'&&(selected==='todos'||b.bedId===selected));
+ const snapshot=()=>JSON.stringify(beds.map(handoffSources));const currentSource=useRef('');currentSource.current=snapshot();
+ useEffect(()=>{if(preview&&preview.source!==currentSource.current){setPreview(null);setNotice('Os registros ou a seleção mudaram. Gere e revise novamente.');}},[state,selected]);
+ const prepare=(patients,source=snapshot())=>{if(source!==currentSource.current){setNotice('Os registros mudaram durante a geração. Gere novamente.');return;}try{patients=validateHandoffResponse(JSON.stringify({pacientes:patients}),beds);}catch(e){setPreview(null);setNotice(e.message);return;}setPreview({source,patients:patients.map(p=>({...p,...Object.fromEntries(HANDOFF_FIELDS.map(k=>[k,[...new Set([...(state.beds[p.leito].handoff?.[k]||[]),...(p[k]||[])])]]))}))});setNotice('Revise os campos abaixo. Itens existentes serão preservados; suportes vêm da ficha.');};
+ const ai=async()=>{const source=snapshot();setBusy(true);setNotice('Gerando para revisão…');abort.current=new AbortController();try{prepare(await generateHandoffAI(beds,{signal:abort.current.signal}),source);}catch(e){if(!abort.current.signal.aborted)setNotice(e.message);}finally{setBusy(false);}};
+ const apply=()=>{if(snapshot()!==preview.source){setPreview(null);setNotice('Os registros ou a seleção mudaram. Gere e revise novamente.');return;}
+  preview.patients.forEach(p=>actions.updateHandoff(p.leito,Object.fromEntries(HANDOFF_FIELDS.filter(k=>p[k].length).map(k=>[k,p[k]]))));setPreview(null);setNotice('Passagem aplicada. Revise a folha antes de imprimir.');};
+ return <section className="editor-card handoff-generator no-print"><h2 className="text-lg font-bold">Gerar passagem automaticamente</h2><p className="muted">Preenche o template com a evolução da data de referência e os suportes registrados. A geração dos registros funciona sem API; a IA organiza os mesmos dados para revisão.</p>
+ <label>Pacientes para gerar<select aria-label="Pacientes para gerar" value={selected} disabled={busy} onChange={e=>{setSelected(e.target.value);setPreview(null);setResponse('');}}><option value="todos">Todos os leitos ocupados</option>{bedIds.map(id=>state.beds[id]).filter(b=>b.status!=='empty').map(b=><option key={b.bedId} value={b.bedId}>{b.bedId} · {b.patientName}</option>)}</select></label>
+ <div className="rx-actions"><button className="primary-btn" disabled={busy||!beds.length} onClick={()=>prepare(beds.map(automaticHandoff))}>Gerar dos registros</button><button className="secondary-btn" disabled={busy||!beds.length} onClick={ai}>{busy?'Gerando…':'Gerar com IA'}</button><button className="secondary-btn" disabled={busy||!beds.length} onClick={async()=>{try{await copyText(handoffPrompt(beds));setNotice('Prompt copiado. Contém dados dos pacientes selecionados; utilize na IA externa autorizada.');}catch(e){setNotice(e.message);}}}>Copiar prompt para IA externa</button></div>
+ <label>Resposta da IA externa (JSON)<textarea aria-label="Resposta da IA externa (JSON)" rows={5} value={response} disabled={busy} onChange={e=>setResponse(e.target.value)} /></label><button className="secondary-btn" disabled={busy||!response.trim()} onClick={()=>{try{prepare(validateHandoffResponse(response,beds));}catch(e){setPreview(null);setNotice(e.message);}}}>Preparar revisão</button>
+ {notice&&<p role="status" className="inline-notice">{notice}</p>}
+ {preview&&<div className="handoff-review"><h3 className="font-bold">Revisão do preenchimento</h3>{preview.patients.map(p=><article key={p.leito}><b>Leito {p.leito} · {p.nome}{p.data_ficha&&` · ${p.data_ficha}`}</b>{HANDOFF_FIELDS.map((k,i)=>p[k].length?<section key={k}><h4>{labels[i]}</h4><textarea aria-label={`${labels[i]} revisão leito ${p.leito}`} rows={3} value={p[k].join('\n')} onChange={e=>{const text=e.target.value;setPreview(v=>({...v,patients:v.patients.map(q=>q.leito===p.leito?{...q,[k]:text.split('\n').map(s=>s.trim()).filter(Boolean)}:q)}));}} /></section>:null)}</article>)}<button className="primary-btn" onClick={apply}>Aplicar passagem revisada</button></div>}
+ </section>;
+}

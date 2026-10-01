@@ -1,0 +1,1 @@
+ALTER TABLE `patients` ADD `medical_history` text DEFAULT '' NOT NULL;

@@ -1,0 +1,11 @@
+import fs from 'node:fs';import React from 'react';import{renderToStaticMarkup}from'react-dom/server';
+import PassagemPrint from '../app/pep/print/PassagemPrint.jsx';import {FICHA_TEMPLATE}from'../app/pep/print/fichaReferenceTemplate.js';
+const dir='.sites-runtime/print-tests';fs.mkdirSync(dir,{recursive:true});
+const sourceCss=fs.readFileSync('app/pep/print/fichaReference.css','utf8');
+const base='<style>*{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:Arial}</style>';
+for(const scenario of ['normal','long-item','long-checklist']){
+ const patients=Array.from({length:10},(_,i)=>({leito:String(i+1).padStart(2,'0'),nome:'PACIENTE SINTÉTICO '+(i+1),idade:'50 anos',internacao:'Admissão 20/09/2026',diagnosticos:['DIAGNÓSTICO DOCUMENTADO'],antecedentes_historia:['ANTECEDENTE DOCUMENTADO'],situacao:[{titulo:'HMA',itens:['HISTÓRIA DOCUMENTADA']},{titulo:'VENTILAÇÃO',itens:['FiO2 40%']}],condutas:scenario==='long-item'&&i===0?['TEXTO DOCUMENTADO EXTENSO '.repeat(900)+'ULTIMO_ITEM_EXTENSO']:['PLANO DOCUMENTADO'],pendencias:['PENDÊNCIA DOCUMENTADA'],checklist:scenario==='long-checklist'&&i===0?Array.from({length:120},(_,j)=>({id:'c'+j,texto:('TAREFA DOCUMENTADA '+j+' ').repeat(20)+(j===119?'ULTIMA_TAREFA':''),status:'pendente'})):[{id:'c',texto:'ÚLTIMA TAREFA DOCUMENTADA',status:'pendente'}]}));
+ const passagem={pacientes:patients,data:'30/09/2026',unidade:'UTI ADULTO',resumo:{total:10,realizados:0,pendentes:10}};
+ fs.writeFileSync(dir+'/'+scenario+'.html','<!doctype html><html lang="pt-BR"><head>'+base+'<style>@page{size:A4 landscape;margin:3mm}</style></head><body>'+renderToStaticMarkup(React.createElement(PassagemPrint,{passagem,id:'print-test'}))+'<script src="fit.js"></script></body></html>');
+}
+fs.writeFileSync(dir+'/ficha.html','<!doctype html><html><head>'+base+'<style>'+sourceCss+'@page{size:A4 portrait;margin:6mm}</style></head><body><div class="ficha-reference">'+FICHA_TEMPLATE+'</div><script>for(const i of document.querySelectorAll("input")){if(i.dataset.row)i.value=[5,6,11].includes(Number(i.dataset.row))?"":"123";else if(i.dataset.dateDay)i.value="20/09/2026";else if(i.id==="patient")i.value="PACIENTE SINTÉTICO";else if(i.id==="bed")i.value="01";else if(i.id==="admission")i.value="20/09/2026";}document.documentElement.dataset.ready="true";</script></body></html>');

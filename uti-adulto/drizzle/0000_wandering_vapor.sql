@@ -1,0 +1,61 @@
+CREATE TABLE `events` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`patient_id` text NOT NULL,
+	`occurred_at` text NOT NULL,
+	`kind` text DEFAULT 'clinico' NOT NULL,
+	`text` text NOT NULL,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `patients` (
+	`id` text PRIMARY KEY NOT NULL,
+	`bed` text NOT NULL,
+	`name` text NOT NULL,
+	`age` text DEFAULT '' NOT NULL,
+	`mrn` text DEFAULT '' NOT NULL,
+	`admission_at` text DEFAULT '' NOT NULL,
+	`icu_admission_at` text DEFAULT '' NOT NULL,
+	`status` text DEFAULT 'atencao' NOT NULL,
+	`diagnoses` text DEFAULT '' NOT NULL,
+	`summary` text DEFAULT '' NOT NULL,
+	`resp_support` text DEFAULT '' NOT NULL,
+	`resp_detail` text DEFAULT '' NOT NULL,
+	`hemo_support` text DEFAULT '' NOT NULL,
+	`hemo_detail` text DEFAULT '' NOT NULL,
+	`neuro_status` text DEFAULT '' NOT NULL,
+	`rass` text DEFAULT '' NOT NULL,
+	`cam_icu` text DEFAULT '' NOT NULL,
+	`renal_detail` text DEFAULT '' NOT NULL,
+	`diuresis_24h` text DEFAULT '' NOT NULL,
+	`balance_24h` text DEFAULT '' NOT NULL,
+	`antibiotics` text DEFAULT '' NOT NULL,
+	`cultures` text DEFAULT '' NOT NULL,
+	`infection_detail` text DEFAULT '' NOT NULL,
+	`diet` text DEFAULT '' NOT NULL,
+	`glucose` text DEFAULT '' NOT NULL,
+	`labs` text DEFAULT '' NOT NULL,
+	`devices` text DEFAULT '' NOT NULL,
+	`vte` text DEFAULT '' NOT NULL,
+	`stress_ulcer` text DEFAULT '' NOT NULL,
+	`skin_mobility` text DEFAULT '' NOT NULL,
+	`abcdef` text DEFAULT '' NOT NULL,
+	`sofa2` text DEFAULT '' NOT NULL,
+	`goals_of_care` text DEFAULT '' NOT NULL,
+	`today_goals` text DEFAULT '' NOT NULL,
+	`handoff` text DEFAULT '' NOT NULL,
+	`contingency` text DEFAULT '' NOT NULL,
+	`archived` integer DEFAULT false NOT NULL,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	`updated_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `tasks` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`patient_id` text NOT NULL,
+	`text` text NOT NULL,
+	`priority` text DEFAULT 'normal' NOT NULL,
+	`due_at` text DEFAULT '' NOT NULL,
+	`completed` integer DEFAULT false NOT NULL,
+	`completed_at` text,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);

@@ -1,0 +1,1338 @@
+[
+  {
+    "id": "8573a2bc-1dcd-4223-a1bb-d08211c9dffc",
+    "categoria": "Antibióticos",
+    "nome": "Aciclovir 250 mg",
+    "prescricao": "Aciclovir 250 mg + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >50: 5-10 mg/kg IV 8/8h",
+        "valor": 50
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 25-50: 5-10 mg/kg IV 12/12h",
+        "valor": 25
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 10-25: 5-10 mg/kg IV 24/24h",
+        "valor": 10
+      },
+      {
+        "op": "else",
+        "texto": "CrCl <10: 5-10 mg/kg IV 24/48h"
+      }
+    ]
+  },
+  {
+    "id": "60a37458-47c2-4306-a2a5-c6cdcc86b220",
+    "categoria": "Antibióticos",
+    "nome": "Amicacina 250mg/mL 2mL",
+    "prescricao": "Amicacina 250mg/mL 2mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >60: 15 mg/kg IV 24/24h",
+        "valor": 60
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 40-60: ajuste para 12/12h",
+        "valor": 40
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 20-40: 15 mg/kg IV 24-36h",
+        "valor": 20
+      },
+      {
+        "op": "else",
+        "texto": "CrCl <20: dose após nível sérico"
+      }
+    ]
+  },
+  {
+    "id": "79698fb5-030f-4b2f-bb20-c14cc3392c39",
+    "categoria": "Antibióticos",
+    "nome": "Amoxicilina + ácido clavulânico",
+    "prescricao": "Amoxicilina + ácido clavulânico 1000 + 200 mg + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "a5b7f2e2-23c9-43a2-92d1-e1589a851467",
+    "categoria": "Antibióticos",
+    "nome": "Ampicilina + sulbactam 1 g",
+    "prescricao": "Ampicilina + sulbactam 1 g + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "e343c997-5a5d-4c25-b785-cabeb199c164",
+    "categoria": "Antibióticos",
+    "nome": "Ampicilina sódica 1 g",
+    "prescricao": "Ampicilina sódica 1 g + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "972d1e65-e7d1-4eb2-bd54-8bba45de2780",
+    "categoria": "Antibióticos",
+    "nome": "Anfotericina B",
+    "prescricao": "Anfotericina B + SG 5% 100 mL, administrar por via intravenosa em bomba de infusão durante 2 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "30a7a1a6-8067-4138-a7a9-616ebc741911",
+    "categoria": "Antibióticos",
+    "nome": "Anfotericina B lipossomal 50mg/10mL",
+    "prescricao": "Anfotericina B lipossomal 50mg/10mL + SG 5% 100 mL, administrar por via intravenosa em bomba de infusão durante 2 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "a7bf0b8b-2c92-4cf0-8696-f9732920785e",
+    "categoria": "Antibióticos",
+    "nome": "Azitromicina 500mg",
+    "prescricao": "Azitromicina 500mg + SF 0,9% 500 mL, administrar por via intravenosa em bomba de infusão durante 2 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "b5c262f2-22a7-4e7c-821e-892336f54c10",
+    "categoria": "Antibióticos",
+    "nome": "Cefalotina sódica 1 g",
+    "prescricao": "Cefalotina sódica 1 g + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "3ad99a04-a6c3-411c-ad42-b9e29e437f31",
+    "categoria": "Antibióticos",
+    "nome": "Cefazolina sódica 1 g",
+    "prescricao": "Cefazolina sódica 1 g + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >50: 1-2g IV 8/8h",
+        "valor": 50
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 10-50: 1g IV 12-24h",
+        "valor": 10
+      },
+      {
+        "op": "else",
+        "texto": "CrCl <10: 500mg-1g IV 24-48h"
+      }
+    ]
+  },
+  {
+    "id": "ba6c4764-6192-4149-8d28-ad53b1f9a79a",
+    "categoria": "Antibióticos",
+    "nome": "Cefepime 1 g",
+    "prescricao": "Cefepime 1 g + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >60: 2g IV 12/12h",
+        "valor": 60
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 30-60: 2g IV 24h",
+        "valor": 30
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 11-29: 1g IV 24h",
+        "valor": 11
+      },
+      {
+        "op": "else",
+        "texto": "CrCl <11: 500mg IV 24h"
+      }
+    ]
+  },
+  {
+    "id": "a77ccf07-d8bb-46f2-a898-e60db9ce1de8",
+    "categoria": "Antibióticos",
+    "nome": "Ceftazidima 2 g",
+    "prescricao": "Ceftazidima 2 g + avibactam 500 mg + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >50: 2g IV 8/8h",
+        "valor": 50
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 30-50: 2g IV 12/12h",
+        "valor": 30
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 15-30: 1g IV 12/12h",
+        "valor": 15
+      },
+      {
+        "op": "else",
+        "texto": "CrCl <15: 500mg IV 24h"
+      }
+    ]
+  },
+  {
+    "id": "b50d4d45-a8e8-480c-9a29-691608163076",
+    "categoria": "Antibióticos",
+    "nome": "Ceftriaxona 1 g",
+    "prescricao": "Ceftriaxona 1 g + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": "else",
+        "texto": "Não requer ajuste para função renal (excreção hepática)"
+      }
+    ]
+  },
+  {
+    "id": "942d76b8-82c5-4d62-952f-34acbd6c519e",
+    "categoria": "Antibióticos",
+    "nome": "Ciprofloxacino 2mg/mL",
+    "prescricao": "Ciprofloxacino 2mg/mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >30: 400mg IV 12/12h",
+        "valor": 30
+      },
+      {
+        "op": "else",
+        "texto": "CrCl ≤30: 400mg IV 24h"
+      }
+    ]
+  },
+  {
+    "id": "cf9d6883-3e23-4d02-8ae6-ab5c38938e70",
+    "categoria": "Antibióticos",
+    "nome": "Clindamicina 150mg/mL ampola 4 mL",
+    "prescricao": "Clindamicina 150mg/mL ampola 4 mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "9ea6b12a-ff77-49a1-ae75-bb01475f54cc",
+    "categoria": "Antibióticos",
+    "nome": "Fluconazol 2mg/mL",
+    "prescricao": "Fluconazol 2mg/mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "69b4e85e-71fe-4117-b348-fa5912d96ed3",
+    "categoria": "Antibióticos",
+    "nome": "Gentamicina 40mg/mL",
+    "prescricao": "Gentamicina 40mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >60: 3-5 mg/kg IV 24/24h",
+        "valor": 60
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 40-60: ajuste para 12/12h",
+        "valor": 40
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 20-40: 3-5 mg/kg IV 24-36h",
+        "valor": 20
+      },
+      {
+        "op": "else",
+        "texto": "CrCl <20: dose após nível sérico"
+      }
+    ]
+  },
+  {
+    "id": "2185b457-e0b7-416f-b24a-c42189d9b0a1",
+    "categoria": "Antibióticos",
+    "nome": "Imipenem + cilastatina 500mg",
+    "prescricao": "Imipenem + cilastatina 500mg + SF 0,9% 100 mL, administrar por via intravenosa em bomba de infusão durante 2 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "024477ef-7980-4a5d-b0c6-665ee0c29b20",
+    "categoria": "Antibióticos",
+    "nome": "Levofloxacino 5mg/mL",
+    "prescricao": "Levofloxacino 5mg/mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >50: 750mg IV 24h",
+        "valor": 50
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 20-49: 750mg IV 48h",
+        "valor": 20
+      },
+      {
+        "op": "else",
+        "texto": "CrCl <20: 500mg IV 48h"
+      }
+    ]
+  },
+  {
+    "id": "7ce7478b-03f3-4ab6-ae9d-d3ea732cea69",
+    "categoria": "Antibióticos",
+    "nome": "Linezolida 2mg/mL",
+    "prescricao": "Linezolida 2mg/mL, administrar por via intravenosa em bomba de infusão durante 2 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "37029cd9-b1a0-4374-a394-efec3f3b34bf",
+    "categoria": "Antibióticos",
+    "nome": "Meropenem 1 g",
+    "prescricao": "Meropenem 1 g + SF 0,9% 100 mL, administrar por via intravenosa em bomba de infusão durante 4 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >50: 1g IV 8/8h",
+        "valor": 50
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 26-50: 1g IV 12/12h",
+        "valor": 26
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 10-25: 500mg IV 12/12h",
+        "valor": 10
+      },
+      {
+        "op": "else",
+        "texto": "CrCl <10: 500mg IV 24h"
+      }
+    ]
+  },
+  {
+    "id": "b7148270-5b0f-4079-8526-95572ee0a33f",
+    "categoria": "Antibióticos",
+    "nome": "Metronidazol 5mg/mL",
+    "prescricao": "Metronidazol 5mg/mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "72a370f1-f2c8-46f4-96d1-5283e15e8f63",
+    "categoria": "Antibióticos",
+    "nome": "Piperacilina + tazobactam 4,5 g",
+    "prescricao": "Piperacilina + tazobactam 4,5 g + SF 0,9% 100 mL, administrar por via intravenosa em bomba de infusão durante 4 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >40: 4,5g IV 6/6h",
+        "valor": 40
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 20-40: 4,5g IV 8/8h",
+        "valor": 20
+      },
+      {
+        "op": "else",
+        "texto": "CrCl <20: 4,5g IV 12/12h"
+      }
+    ]
+  },
+  {
+    "id": "f74cbd94-3d8c-4d0e-a949-750451e9b2b4",
+    "categoria": "Antibióticos",
+    "nome": "Polimixina B 500.000UI",
+    "prescricao": "Polimixina B 500.000UI + SG 5% 500 mL, administrar por via intravenosa em bomba de infusão durante 2 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "7a51a47d-cf61-4843-a33a-665ceb370e79",
+    "categoria": "Antibióticos",
+    "nome": "Vancomicina 500mg",
+    "prescricao": "Vancomicina 500mg + SF 0,9% 100 mL, administrar por via intravenosa em bomba de infusão durante 2 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": [
+      {
+        "op": ">",
+        "texto": "CrCl >50: 15-20 mg/kg IV 8-12h",
+        "valor": 50
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 30-50: 15-20 mg/kg IV 12-24h",
+        "valor": 30
+      },
+      {
+        "op": ">=",
+        "texto": "CrCl 10-30: 15-20 mg/kg IV 24-48h",
+        "valor": 10
+      },
+      {
+        "op": "else",
+        "texto": "CrCl <10: individualizar (monitorar nível)"
+      }
+    ]
+  },
+  {
+    "id": "453c7219-050a-402b-99da-398c033a2661",
+    "categoria": "Outros",
+    "nome": "Acetilcisteína 100mg/mL 3mL",
+    "prescricao": "Acetilcisteína 100mg/mL 3mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "14a2866d-28e1-4ea2-aabd-a5224c6aa49b",
+    "categoria": "Outros",
+    "nome": "Ácido ascórbico 100mg/mL 5mL",
+    "prescricao": "Ácido ascórbico 100mg/mL 5mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "981ba04d-70cb-4eac-9a9e-0e533213ad0b",
+    "categoria": "Outros",
+    "nome": "Ácido tranexâmico 250mg/5mL",
+    "prescricao": "Ácido tranexâmico 250mg/5mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "5e29620d-46f3-41ce-a5ee-5b05c968ffe1",
+    "categoria": "Outros",
+    "nome": "Adenosina 3mg/mL 2mL",
+    "prescricao": "Adenosina 3mg/mL 2mL, administrar por via intravenosa.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "0c5466e4-c3dc-4968-a366-8dd0ad7c1514",
+    "categoria": "Outros",
+    "nome": "Albumina humana 200mg/mL 50mL",
+    "prescricao": "Albumina humana 200mg/mL 50mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "3a0959cb-5fc4-4a52-8bc3-52850fee42ff",
+    "categoria": "Outros",
+    "nome": "Alteplase 50mg",
+    "prescricao": "Alteplase 50mg, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "445e1205-6e89-48b8-ad09-52aa6d46d942",
+    "categoria": "Outros",
+    "nome": "Aminofilina 24mg/mL 2mL",
+    "prescricao": "Aminofilina 24mg/mL 2mL + SF 0,9% 250 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "fa64956e-47cb-40a4-a3eb-20c548bcf10c",
+    "categoria": "Outros",
+    "nome": "Atropina 0,25mg/mL",
+    "prescricao": "Atropina 0,25mg/mL, administrar por via intravenosa.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "63b8b981-ef6f-4b6d-81cd-c7c61169152a",
+    "categoria": "Outros",
+    "nome": "Bicarbonato de sódio 8,4% ampola 10mL",
+    "prescricao": "Bicarbonato de sódio 8,4% ampola 10mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "4bdeaa1b-ac74-4f79-ba65-5258e4771fb5",
+    "categoria": "Outros",
+    "nome": "Bromoprida 10mg/mL ampola",
+    "prescricao": "Bromoprida 10mg/mL ampola + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "a411bf57-895f-4c3f-be08-26047ac6644c",
+    "categoria": "Outros",
+    "nome": "Butilbrometo de escopolamina 4mg",
+    "prescricao": "Butilbrometo de escopolamina 4mg + dipirona sódica 1 g + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "9495fdb2-b3f5-414f-a710-edf40f674c7a",
+    "categoria": "Outros",
+    "nome": "Cetoprofeno 100 mg",
+    "prescricao": "Cetoprofeno 100 mg + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "7149b2cb-edc7-4f4d-bb18-80d2ecc1134f",
+    "categoria": "Outros",
+    "nome": "Cloreto de potássio 19,1%",
+    "prescricao": "Cloreto de potássio 19,1% 20 mL + SF 0,9% 500 mL, administrar por via intravenosa BIC durante 8 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "437c4c18-2662-489b-9a0b-ecacbdf2fd1a",
+    "categoria": "Outros",
+    "nome": "Cloreto de sódio 20%",
+    "prescricao": "Cloreto de sódio 20% 20 mL + SF 0,9% 80 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "38a06694-6704-411c-aa29-78dedb6a1d26",
+    "categoria": "Outros",
+    "nome": "Complexo B",
+    "prescricao": "Complexo B + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "a3e8e01d-7701-455f-bd36-b5c55b39c39d",
+    "categoria": "Outros",
+    "nome": "Deslanosídeo 0,2mg/mL",
+    "prescricao": "Deslanosídeo 0,2mg/mL, administrar por via intravenosa.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "94131e8e-4292-4da0-8c3a-319899075056",
+    "categoria": "Outros",
+    "nome": "Dexametasona 4mg/mL",
+    "prescricao": "Dexametasona 4mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "ab6ca30d-4e25-489b-9c93-a9c281a84615",
+    "categoria": "Outros",
+    "nome": "Diazepam 5mg/mL",
+    "prescricao": "Diazepam 5mg/mL, administrar por via intravenosa.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "2cfbb799-e176-469f-9cc6-b314e3e42483",
+    "categoria": "Outros",
+    "nome": "Diclofenaco sódico 25mg/mL",
+    "prescricao": "Diclofenaco sódico 25mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "483c1c8c-eb22-42f7-a6f8-08ae95404fa3",
+    "categoria": "Outros",
+    "nome": "Difenidramina 50mg/mL",
+    "prescricao": "Difenidramina 50mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "7e257593-7a74-46bf-b288-ec8ac82523d2",
+    "categoria": "Outros",
+    "nome": "Dimenidrinato 50mg/mL",
+    "prescricao": "Dimenidrinato 50mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "f41c2df9-043b-4969-9f58-33c5d7d6a723",
+    "categoria": "Outros",
+    "nome": "Dipirona sódica 500mg/mL",
+    "prescricao": "Dipirona sódica 500mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "80b4139f-9142-42c7-b5f1-2d4a2b9f8feb",
+    "categoria": "Outros",
+    "nome": "Enoxaparina sódica 40mg",
+    "prescricao": "Enoxaparina sódica 40mg, administrar por via subcutânea.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "e6c4f35c-97ab-475b-8ba6-e1cc5d4f16a0",
+    "categoria": "Outros",
+    "nome": "Etomidato 2mg/mL",
+    "prescricao": "Etomidato 2mg/mL, administrar por via intravenosa.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "d1bbfcd3-e4b9-487d-8941-023151738181",
+    "categoria": "Outros",
+    "nome": "Furosemida 10mg/mL",
+    "prescricao": "Furosemida 10mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "cae48e46-ec86-4f19-8f2b-a479a23acf7d",
+    "categoria": "Outros",
+    "nome": "Glicose 50%",
+    "prescricao": "Glicose 50% 40 mL, administrar por via intravenosa.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "3dc2ca2e-1b8a-43f5-adeb-1711015d6e71",
+    "categoria": "Outros",
+    "nome": "Haloperidol 5mg/mL",
+    "prescricao": "Haloperidol 5mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "06a8e7a4-20cf-4395-b41f-971f37d9ecb4",
+    "categoria": "Outros",
+    "nome": "Heparina sódica 5000UI/mL",
+    "prescricao": "Heparina sódica 5000UI/mL + SF 0,9% 100 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "016607fa-354d-4f60-b76c-ba41517e8306",
+    "categoria": "Outros",
+    "nome": "Hidralazina 20mg/mL",
+    "prescricao": "Hidralazina 20mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "ed9167f4-758f-453f-a14a-ef6a5475e4c1",
+    "categoria": "Outros",
+    "nome": "Hidrocortisona 100mg",
+    "prescricao": "Hidrocortisona 100mg + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "d7ecb1d0-cc6a-4189-80a6-d5816d52052e",
+    "categoria": "Outros",
+    "nome": "Insulina regular 100UI/mL",
+    "prescricao": "Insulina regular 100UI/mL + SF 0,9% 100 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "8732f5ee-28a9-41cd-8a97-d5dd32d80e1f",
+    "categoria": "Outros",
+    "nome": "Lactato de milrinona",
+    "prescricao": "Milrinona 1mg/mL ampola 10 mL 4 ampolas (40 mL) + SG 5% 210 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 0.375,
+    "dose_max": 0.75,
+    "concentracao": 160,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null
+  },
+  {
+    "id": "6d7d27ab-41fa-4f6f-9f44-bbe109896833",
+    "categoria": "Outros",
+    "nome": "Lorazepam 2mg/mL",
+    "prescricao": "Lorazepam 2mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "de2c9e20-4694-46b1-b9c2-72b5dce1ecab",
+    "categoria": "Outros",
+    "nome": "Magnesio sulfato 50%",
+    "prescricao": "Magnésio sulfato 50% 10 mL + SF 0,9% 90 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "dd85c286-102f-42a0-8472-b905bbb76ed0",
+    "categoria": "Outros",
+    "nome": "Metilprednisolona 125mg",
+    "prescricao": "Metilprednisolona 125mg + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "ac31cbab-7810-4933-b3be-1832cbf112be",
+    "categoria": "Outros",
+    "nome": "Midazolam 5mg/mL",
+    "prescricao": "Midazolam 5mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "be2e4716-d122-410e-90f7-89aec92744cc",
+    "categoria": "Outros",
+    "nome": "Morfina 10mg/mL",
+    "prescricao": "Morfina 10mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "6adca3da-a504-44a8-be33-1ba017017616",
+    "categoria": "Outros",
+    "nome": "Naloxona 0,4mg/mL",
+    "prescricao": "Naloxona 0,4mg/mL, administrar por via intravenosa.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "fc5dd26f-7231-4c34-b1af-0fc7bfcced98",
+    "categoria": "Outros",
+    "nome": "Omeprazol 40mg",
+    "prescricao": "Omeprazol 40mg + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "82b598c4-4f29-461c-8892-e58c137a9f53",
+    "categoria": "Outros",
+    "nome": "Ondansetrona 2mg/mL",
+    "prescricao": "Ondansetrona 2mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "d16fe80b-8899-4aac-9bcd-8169a340949b",
+    "categoria": "Outros",
+    "nome": "Pantoprazol 40mg",
+    "prescricao": "Pantoprazol 40mg + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "8b768728-2b2b-467c-b2f3-bff4563e3b0b",
+    "categoria": "Outros",
+    "nome": "Potássio + Magnésio",
+    "prescricao": "Cloreto de potássio 19,1% 20 mL + Magnésio 10% 10mL + SF 0,9% 500 mL, administrar por via intravenosa BIC durante 8 horas.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "7ea61e50-418c-4316-b9fb-96b4f6bde276",
+    "categoria": "Outros",
+    "nome": "Protamina 10mg/mL",
+    "prescricao": "Protamina 10mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "060fa3d4-00bc-4cd3-b096-531e5f680c60",
+    "categoria": "Outros",
+    "nome": "Suxametônio 100mg",
+    "prescricao": "Suxametônio 100mg + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "842b2c9a-a31c-40d7-a731-f222107af89e",
+    "categoria": "Outros",
+    "nome": "Terbutalina 0,5mg/mL",
+    "prescricao": "Terbutalina 0,5mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "85fc0050-4add-408f-94c7-aaa6476454b3",
+    "categoria": "Outros",
+    "nome": "Tiamina 100mg/mL",
+    "prescricao": "Tiamina 100mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "d7bc9d5c-3074-4b70-a60c-dec60cd330db",
+    "categoria": "Outros",
+    "nome": "Tramadol 50mg/mL",
+    "prescricao": "Tramadol 50mg/mL + SF 0,9% 100 mL, administrar por via intravenosa em infusão lenta.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "c6510117-5725-4495-8f00-cb9649f71f3d",
+    "categoria": "Outros",
+    "nome": "Vasopressina 20UI/mL",
+    "prescricao": "Vasopressina 20UI/mL + SF 0,9% 100 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "3f92b693-069a-460a-af8c-e70af52b072e",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Amiodarona 50mg/mL 6 ampolas (18 mL)",
+    "prescricao": "Amiodarona 50mg/mL 6 ampolas (18 mL) + SG 5% 232 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "1f0356b7-48fb-4647-adae-0c1fd3f8f8fb",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Atracúrio 10mg/5mL 5 ampolas (25 mL)",
+    "prescricao": "Atracúrio 10mg/5mL 5 ampolas (25 mL) + SF 0,9% 225 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 11,
+    "dose_max": 13,
+    "concentracao": 200,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null,
+    "pendencia": "Apresentação cadastrada 10 mg/5 mL diverge da apresentação usual de 50 mg/5 mL. Confira o frasco e corrija a receita e a concentração antes de calcular."
+  },
+  {
+    "id": "f720e18f-5d55-4893-b942-f75e1f60d9f3",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Cetamina 50mg/10mL",
+    "prescricao": "Cetamina 50mg/10mL + SG 5% 90 mL, administrar por via intravenosa em bomba de infusão durante 2 horas.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 1,
+    "dose_max": 2,
+    "concentracao": 500,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null,
+    "pendencia": "A receita define duração fixa de 2 horas, mas a dose cadastrada é de infusão titulável. Corrija a modalidade, a apresentação e a concentração antes de calcular."
+  },
+  {
+    "id": "39ec6c9b-c49b-41c6-a2bd-1252570b1fbd",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Dobutamina 250mg/20mL 2 ampolas (40 mL)",
+    "prescricao": "Dobutamina 250mg/20mL 2 ampolas (40 mL) + SG 5% 210 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 2,
+    "dose_max": 10,
+    "concentracao": 2000,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null
+  },
+  {
+    "id": "78571db3-f494-4b37-b268-9b44fab03211",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Dopamina 5mg/mL ampola 10 mL",
+    "prescricao": "Dopamina 5mg/mL ampola 10 mL + SF 0,9% 100 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 2,
+    "dose_max": 20,
+    "concentracao": 454.545455,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null
+  },
+  {
+    "id": "74213053-162f-4976-9521-30ae94b9024b",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Esmolol 250mg/mL ampola 10 mL",
+    "prescricao": "Esmolol 250mg/mL ampola 10 mL + SF 0,9% 250 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 50,
+    "dose_max": 300,
+    "concentracao": 9615.384615,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null,
+    "pendencia": "Confira se a apresentação é realmente o concentrado de 250 mg/mL. Bolsas prontas têm concentrações diferentes. Corrija a receita e a concentração conforme o produto disponível."
+  },
+  {
+    "id": "fecb5779-1fe4-4694-9176-9fba38f765d5",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Fentanil 0,05mg/mL 3 ampolas (30 mL)",
+    "prescricao": "Fentanil 0,05mg/mL 3 ampolas (30 mL) + SG 5% 100 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/h",
+    "dose_min": 1,
+    "dose_max": 5,
+    "concentracao": 11.538462,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null
+  },
+  {
+    "id": "fbfc74fb-165b-43e8-9259-9ae6ca1f2c88",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Nitroglicerina 5mg/mL ampola 10 mL",
+    "prescricao": "Nitroglicerina 5mg/mL ampola 10 mL + SG 5% 240 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": false,
+    "unidade": null,
+    "dose_min": null,
+    "dose_max": null,
+    "concentracao": null,
+    "unidade_conc": null,
+    "ajuste_renal": null
+  },
+  {
+    "id": "272101cd-3560-4aea-a8ac-71e3da219e50",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Nitroprussiato de sódio 25mg/mL ampola 2 mL",
+    "prescricao": "Nitroprussiato de sódio 25mg/mL ampola 2 mL + SG 5% 250 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 0.5,
+    "dose_max": 10,
+    "concentracao": 198.412698,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null
+  },
+  {
+    "id": "27cae2b7-0568-4d68-af96-f5fb6666342a",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Norepinefrina 1mg/mL ampola 4 mL 4 ampolas (16 mL)",
+    "prescricao": "Norepinefrina 1mg/mL ampola 4 mL 4 ampolas (16 mL) + SG 5% 234 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 0.03,
+    "dose_max": 0.6,
+    "concentracao": 64,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null
+  },
+  {
+    "id": "ebd7a3cf-96bb-4769-a723-fb01ca49b52d",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Precedex / Dexmedetomidina 100 mcg/ mL SOL INJ FA 2 mL",
+    "prescricao": "Dexmedetomidina 2 amp (4mL) + 96 mL de SF 0,9% para adm EV em BIC",
+    "calc_peso": true,
+    "unidade": "mcg/kg/h",
+    "dose_min": 0.2,
+    "dose_max": 0.7,
+    "concentracao": 4,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null,
+    "nota": "Correção do cadastro original: 400 mcg em volume final de 100 mL = 4 mcg/mL; manutenção em mcg/kg/h. Dose inicial aqui é a taxa inicial da infusão, não dose de ataque.",
+    "fonte": "https://www.pfizer.com.br/files/Precedex_Profissional_de_Saude.pdf"
+  },
+  {
+    "id": "5da62b61-022d-4b03-b1a0-c97fff56e3f3",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Propofol 10mg/mL ampola ou FA 20 mL 5 ampolas (100 mL)",
+    "prescricao": "Propofol 10mg/mL ampola ou FA 20 mL 5 ampolas (100 mL), administrar por via intravenosa em BIC.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 5,
+    "dose_max": 50,
+    "concentracao": 10000,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null
+  },
+  {
+    "id": "b882f697-ab49-4430-8ff7-f2d10e10d4d1",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Remifentanila 2 mg FA",
+    "prescricao": "Remifentanila 2 mg FA + AD 10 mL, administrar por via intravenosa.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 0.1,
+    "dose_max": 1,
+    "concentracao": 200,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null
+  },
+  {
+    "id": "d62c755b-2df8-4c9b-bbcf-c271c8e3c63b",
+    "categoria": "Vasoativos e Sedação",
+    "nome": "Rocurônio 10mg/mL FA 5 mL 5 ampolas (25 mL)",
+    "prescricao": "Rocurônio 10mg/mL FA 5 mL 5 ampolas (25 mL) + SG 5% 250 mL, administrar por via intravenosa em BIC.",
+    "calc_peso": true,
+    "unidade": "mcg/kg/min",
+    "dose_min": 10,
+    "dose_max": 12,
+    "concentracao": 909.090909,
+    "unidade_conc": "mcg/mL",
+    "ajuste_renal": null
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "source_commit": "d359b1a6f39b344233775286083465b3ed5a4422",
+  "build": "passed",
+  "backend_bundle": "passed",
+  "database_migrations": "passed on local SQLite/libSQL",
+  "authentication": "passed",
+  "patient_save_reload": "passed",
+  "transaction_rollback": "passed",
+  "external_services": "Not connected; require owner credentials"
+}
