@@ -17,6 +17,11 @@ test('schema estrito: additionalProperties false, opcionais anuláveis e restri�
  assert.equal(s.properties.b.anyOf[0].items.additionalProperties,false);
 });
 
+test('cabeçalho de workspace enviado com chave não vinculada',async()=>{
+ const mock=mockClaude(()=>({text:JSON.stringify({a:'x'})}));
+ try{await claudeJSON({apiKey:'sk-ant-x',workspaceId:'wrkspc_abc'},{system:'S',content:'C',schema});assert.equal(mock.calls[0].headers.get('anthropic-workspace-id'),'wrkspc_abc');}finally{mock.restore();}
+});
+
 test('claudeJSON: modelo padrão, fallback no servidor, uso contabilizado e nulos removidos',async()=>{
  const mock=mockClaude(()=>({text:JSON.stringify({a:'ok',b:null})}));
  try{
@@ -113,7 +118,11 @@ test('Netlify AI Gateway: usa a URL injetada e desativa o fallback beta (cabeça
  const gw=configFromEnv({ANTHROPIC_API_KEY:'k',ANTHROPIC_BASE_URL:'https://gateway.netlify.test/anthropic'});
  assert.equal(gw.fallbacks,false);assert.equal(gw.baseURL,'https://gateway.netlify.test/anthropic');
  assert.equal(configFromEnv({ANTHROPIC_API_KEY:'k'}).fallbacks,true);
- const own=configFromEnv({ANTHROPIC_API_KEY:'sk-ant-api03-x',ANTHROPIC_BASE_URL:'https://gateway.netlify.test/anthropic'});assert.equal(own.baseURL,undefined);assert.equal(own.fallbacks,true);
+ const both={ANTHROPIC_API_KEY:'gw-key',ANTHROPIC_BASE_URL:'https://gateway.netlify.test/anthropic',ANTHROPIC_OWN_API_KEY:'sk-ant-api03-x'};
+ let c=configFromEnv(both);assert.equal(c.route,'gateway');assert.equal(c.apiKey,'gw-key');assert.match(c.pending,/WORKSPACE_ID/);
+ c=configFromEnv({...both,ANTHROPIC_WORKSPACE_ID:'wrkspc_1'});assert.deepEqual([c.route,c.apiKey,c.workspaceId,c.baseURL,c.fallbacks],['own','sk-ant-api03-x','wrkspc_1',undefined,true]);
+ c=configFromEnv({...both,ANTHROPIC_ROUTE:'own'});assert.equal(c.route,'own');
+ c=configFromEnv({ANTHROPIC_OWN_API_KEY:'sk-ant-api03-x'});assert.equal(c.route,'own');assert.equal(c.apiKey,'sk-ant-api03-x');
  const original=globalThis.fetch;let sent;globalThis.fetch=async(url,init)=>{sent={url:String(url),body:JSON.parse(init.body),beta:new Headers(init.headers).get('anthropic-beta')};return new Response('event: message_start\ndata: {"type":"message_start","message":{"id":"m","type":"message","role":"assistant","model":"claude-opus-5-5","content":[],"stop_reason":null,"usage":{"input_tokens":1,"output_tokens":0}}}\n\nevent: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}\n\nevent: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"{\\"a\\":\\"x\\"}"}}\n\nevent: content_block_stop\ndata: {"type":"content_block_stop","index":0}\n\nevent: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":3}}\n\nevent: message_stop\ndata: {"type":"message_stop"}\n\n',{headers:{'content-type':'text/event-stream'}});};
  try{const r=await claudeJSON(gw,{system:'S',content:'C',schema});assert.deepEqual(r.value,{a:'x'});assert.match(sent.url,/^https:\/\/gateway\.netlify\.test\/anthropic\/v1\/messages/);assert.equal(sent.body.fallbacks,undefined);assert.equal(sent.beta,null);}finally{globalThis.fetch=original;}
 });

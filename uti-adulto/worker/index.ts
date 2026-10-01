@@ -21,6 +21,9 @@ interface Env {
   ANTHROPIC_MODEL?: string;
   ANTHROPIC_FALLBACKS?: string;
   ANTHROPIC_BASE_URL?: string;
+  ANTHROPIC_OWN_API_KEY?: string;
+  ANTHROPIC_WORKSPACE_ID?: string;
+  ANTHROPIC_ROUTE?: string;
   // Dispara a execução de um job de IA em background (produção). Ausente: execução síncrona.
   AI_DISPATCH?: (jobId: string, request: Request) => Promise<void>;
   IMAGES: {
@@ -196,7 +199,7 @@ const baseWorker = {
 
     if (authConfigured && !(await hasValidSession(request, env))) return url.pathname.startsWith('/api/') ? Response.json({error:'Sessão expirada. Entre novamente.'},{status:401,headers:{'Cache-Control':'no-store'}}) : loginPage();
     if(url.pathname === '/api/session') return Response.json({ok:true},{headers:{'Cache-Control':'no-store'}});
-    if(url.pathname === '/api/ai/status' && request.method === 'GET') return Response.json({configured:Boolean(env.ANTHROPIC_API_KEY),provider:'Anthropic (Claude)',route:isGateway(configFromEnv(env).baseURL)?'Netlify AI Gateway (créditos Netlify)':'API Anthropic (chave própria)',model:env.ANTHROPIC_MODEL||DEFAULT_MODEL,fallbacks:configFromEnv(env).fallbacks,async:Boolean(env.AI_DISPATCH)},{headers:{'Cache-Control':'no-store'}});
+    if(url.pathname === '/api/ai/status' && request.method === 'GET'){const ai=configFromEnv(env);return Response.json({configured:Boolean(ai.apiKey),provider:'Anthropic (Claude)',route:ai.route==='gateway'?'Netlify AI Gateway (créditos Netlify)':'API Anthropic (chave própria'+(ai.workspaceId?', workspace '+ai.workspaceId:'')+')',pending:ai.pending||'',model:ai.model,fallbacks:ai.fallbacks,async:Boolean(env.AI_DISPATCH)},{headers:{'Cache-Control':'no-store'}});}
     if(url.pathname === '/api/ai/usage' && request.method === 'GET') return Response.json(await usageReport(env.DB),{headers:{'Cache-Control':'no-store'}});
     if(url.pathname === '/api/ai/job' && request.method === 'GET'){const job=await readJob(env.DB,url.searchParams.get('id')||'');return job?Response.json(job,{headers:{'Cache-Control':'no-store'}}):Response.json({error:'Execução não encontrada.'},{status:404});}
     // Rotas de IA: em produção viram jobs em background (202 + id); sem despachante, executam direto.
@@ -205,7 +208,7 @@ const baseWorker = {
       const operation=aiOperation(url.pathname,request.method,bodyText);
       const rebuilt=new Request(request.url,{method:'POST',headers:request.headers,body:bodyText});
       if(operation&&env.AI_DISPATCH){
-        if(!env.ANTHROPIC_API_KEY)return Response.json({error:'IA (Claude) não configurada: cadastre ANTHROPIC_API_KEY no Netlify. Enquanto isso, use o prompt externo.'},{status:503});
+        if(!configFromEnv(env).apiKey)return Response.json({error:'IA (Claude) não configurada: cadastre ANTHROPIC_API_KEY no Netlify. Enquanto isso, use o prompt externo.'},{status:503});
         if(bodyText.length>9000000)return Response.json({error:'Entrada muito extensa.'},{status:413});
         const id=await enqueueJob(env.DB,url.pathname,operation,bodyText);
         await env.AI_DISPATCH(id,request);

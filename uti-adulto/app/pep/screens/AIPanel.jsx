@@ -40,6 +40,7 @@ export default function AIPanel() {
           <div><dt>Fallback em recusa</dt><dd>{status.fallbacks ? 'Ativo (servidor Anthropic)' : 'Indisponível nesta conexão'}</dd></div>
         </dl>}
         <div className="editor-actions"><button type="button" className="primary-btn" disabled={test.busy || !status?.configured} onClick={runTest}>Testar conexão</button><button type="button" className="secondary-btn" onClick={load}>Atualizar</button>{test.text && <span role="status">{test.text}</span>}</div>
+        {status?.pending && <div className="inline-notice">{status.pending} No console da Anthropic: Settings → Workspaces → copie o ID (wrkspc_…); no Netlify: Environment variables → ANTHROPIC_WORKSPACE_ID; depois publique novamente.</div>}
         {status && !status.configured && <div className="inline-notice">
           <b>Como ativar:</b> crie uma chave em console.anthropic.com → Settings → API Keys; no Netlify, abra o site → Project configuration → Environment variables e cadastre <code>ANTHROPIC_API_KEY</code> (escopo Functions, marcada como secreta). Publique novamente o site para a função carregar a chave.
         </div>}

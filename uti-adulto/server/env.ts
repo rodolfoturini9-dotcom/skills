@@ -11,5 +11,5 @@ const assets={async fetch(request:Request){
 // Variáveis de ambiente do servidor (Netlify) no formato esperado pelo worker.
 export function serverEnv(db:unknown){
  return {DB:db,ACCESS_PASSWORD:process.env.ACCESS_PASSWORD||'',ACCESS_SESSION_SECRET:process.env.ACCESS_SESSION_SECRET||'',
-  ANTHROPIC_API_KEY:process.env.ANTHROPIC_API_KEY||'',ANTHROPIC_MODEL:process.env.ANTHROPIC_MODEL||'',ANTHROPIC_FALLBACKS:process.env.ANTHROPIC_FALLBACKS||'',ANTHROPIC_BASE_URL:process.env.ANTHROPIC_BASE_URL||'',ASSETS:assets};
+  ANTHROPIC_API_KEY:process.env.ANTHROPIC_API_KEY||'',ANTHROPIC_MODEL:process.env.ANTHROPIC_MODEL||'',ANTHROPIC_FALLBACKS:process.env.ANTHROPIC_FALLBACKS||'',ANTHROPIC_BASE_URL:process.env.ANTHROPIC_BASE_URL||'',ANTHROPIC_OWN_API_KEY:process.env.ANTHROPIC_OWN_API_KEY||'',ANTHROPIC_WORKSPACE_ID:process.env.ANTHROPIC_WORKSPACE_ID||'',ANTHROPIC_ROUTE:process.env.ANTHROPIC_ROUTE||'',ASSETS:assets};
 }

@@ -15,7 +15,7 @@ export const MODEL_PRICING: Record<string, {input: number; output: number}> = {
 };
 
 export type Effort = 'low' | 'medium' | 'high' | 'xhigh' | 'max';
-export interface ClaudeConfig {apiKey: string; model?: string; fallbacks?: boolean; baseURL?: string}
+export interface ClaudeConfig {apiKey: string; model?: string; fallbacks?: boolean; baseURL?: string; workspaceId?: string; route?: 'own' | 'gateway'; pending?: string}
 export interface UsageEntry {model: string; inputTokens: number; outputTokens: number; requestId: string}
 
 // Coleta o uso de tokens das chamadas feitas dentro de um job (sem variáveis globais compartilhadas).
@@ -32,11 +32,22 @@ export class ClaudeError extends Error {
 // Netlify AI Gateway: injeta ANTHROPIC_API_KEY e ANTHROPIC_BASE_URL nas funções (cobrança em créditos Netlify).
 // O gateway não repassa cabeçalhos beta; nesse modo o fallback de recusa (beta) fica desativado.
 export function isGateway(baseURL?: string) { return !!baseURL && !/^https:\/\/api\.anthropic\.com\/?$/.test(baseURL); }
-export function configFromEnv(env: {ANTHROPIC_API_KEY?: string; ANTHROPIC_MODEL?: string; ANTHROPIC_FALLBACKS?: string; ANTHROPIC_BASE_URL?: string}): ClaudeConfig {
-  // Chave própria da Anthropic (sk-ant-...) vai sempre direto à API, mesmo se o gateway injetar sua URL.
-  const ownKey = /^sk-ant-/.test(env.ANTHROPIC_API_KEY || '');
-  const baseURL = ownKey ? '' : env.ANTHROPIC_BASE_URL || '';
-  return {apiKey: env.ANTHROPIC_API_KEY || '', model: env.ANTHROPIC_MODEL || DEFAULT_MODEL, baseURL: baseURL || undefined, fallbacks: env.ANTHROPIC_FALLBACKS !== 'off' && !isGateway(baseURL)};
+export interface AIEnv {ANTHROPIC_API_KEY?: string; ANTHROPIC_MODEL?: string; ANTHROPIC_FALLBACKS?: string; ANTHROPIC_BASE_URL?: string; ANTHROPIC_OWN_API_KEY?: string; ANTHROPIC_WORKSPACE_ID?: string; ANTHROPIC_ROUTE?: string}
+// Seleção da conexão:
+// - ANTHROPIC_OWN_API_KEY: chave própria (console.anthropic.com), sempre direto em api.anthropic.com.
+//   Chaves não vinculadas a workspace exigem ANTHROPIC_WORKSPACE_ID (cabeçalho anthropic-workspace-id).
+// - ANTHROPIC_API_KEY + ANTHROPIC_BASE_URL: injetadas pelo Netlify AI Gateway (ou chave própria sem gateway).
+// Padrão: chave própria quando houver workspace (ou ANTHROPIC_ROUTE=own); senão gateway, se existir.
+export function configFromEnv(env: AIEnv): ClaudeConfig {
+  const model = env.ANTHROPIC_MODEL || DEFAULT_MODEL, fallbacksOn = env.ANTHROPIC_FALLBACKS !== 'off';
+  const own = env.ANTHROPIC_OWN_API_KEY || (/^sk-ant-/.test(env.ANTHROPIC_API_KEY || '') ? env.ANTHROPIC_API_KEY! : '');
+  const gatewayURL = isGateway(env.ANTHROPIC_BASE_URL) ? env.ANTHROPIC_BASE_URL! : '';
+  const gatewayKey = env.ANTHROPIC_API_KEY && env.ANTHROPIC_API_KEY !== own ? env.ANTHROPIC_API_KEY : '';
+  const useOwn = !!own && (env.ANTHROPIC_ROUTE === 'own' || !!env.ANTHROPIC_WORKSPACE_ID || !(gatewayURL && gatewayKey)) && env.ANTHROPIC_ROUTE !== 'gateway';
+  if (useOwn) return {apiKey: own, model, workspaceId: env.ANTHROPIC_WORKSPACE_ID || undefined, route: 'own', fallbacks: fallbacksOn};
+  if (gatewayURL && gatewayKey) return {apiKey: gatewayKey, model, baseURL: gatewayURL, route: 'gateway', fallbacks: false,
+    pending: own && !env.ANTHROPIC_WORKSPACE_ID ? 'Chave própria cadastrada: informe ANTHROPIC_WORKSPACE_ID (ou use ANTHROPIC_ROUTE=own para chave vinculada a workspace).' : undefined};
+  return {apiKey: env.ANTHROPIC_API_KEY || '', model, baseURL: env.ANTHROPIC_BASE_URL || undefined, route: 'own', fallbacks: fallbacksOn && !isGateway(env.ANTHROPIC_BASE_URL)};
 }
 
 // Structured outputs exige additionalProperties:false e não aceita limites numéricos/de tamanho.
@@ -70,7 +81,8 @@ export function imageBlock(dataUrl: string): Anthropic.Beta.BetaImageBlockParam 
 export function clientFor(config: ClaudeConfig) {
   if (!config.apiKey) throw new ClaudeError('IA não configurada: cadastre ANTHROPIC_API_KEY no Netlify.', 503);
   // baseURL explícita (gateway ou API direta): nunca depende de variáveis implícitas do processo.
-  return new Anthropic({apiKey: config.apiKey, baseURL: config.baseURL || 'https://api.anthropic.com', maxRetries: 2, timeout: 10 * 60 * 1000});
+  return new Anthropic({apiKey: config.apiKey, baseURL: config.baseURL || 'https://api.anthropic.com', maxRetries: 2, timeout: 10 * 60 * 1000,
+    ...(config.workspaceId ? {defaultHeaders: {'anthropic-workspace-id': config.workspaceId}} : {})});
 }
 
 function translateError(error: unknown): ClaudeError {
@@ -79,6 +91,7 @@ function translateError(error: unknown): ClaudeError {
   if (error instanceof Anthropic.PermissionDeniedError) return new ClaudeError('A chave da API não tem permissão para este modelo ou recurso.', 503);
   if (error instanceof Anthropic.NotFoundError) return new ClaudeError('Modelo de IA não encontrado. Revise ANTHROPIC_MODEL.', 503);
   if (error instanceof Anthropic.RateLimitError) return new ClaudeError('Limite de uso da API Anthropic atingido. Tente novamente em instantes.', 429);
+  if (error instanceof Anthropic.BadRequestError && /workspace/i.test(error.message)) return new ClaudeError('A chave da Anthropic não está vinculada a um workspace: cadastre ANTHROPIC_WORKSPACE_ID no Netlify ou use uma chave criada dentro de um workspace.', 503);
   if (error instanceof Anthropic.BadRequestError) return new ClaudeError('Requisição recusada pela API Anthropic: ' + error.message.slice(0, 300), 400);
   if (error instanceof Anthropic.APIConnectionError) return new ClaudeError('Sem conexão com a API Anthropic. Tente novamente.', 503);
   if (error instanceof Anthropic.APIError) return new ClaudeError(`Falha na API Anthropic (${error.status ?? 'sem status'}).`, 502);

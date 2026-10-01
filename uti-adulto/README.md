@@ -21,7 +21,10 @@ Os arquivos JS/CSS de `dist/assets` são públicos (somente código). As página
 | --- | --- | --- |
 | `ACCESS_PASSWORD` | Sim | Senha de acesso ao sistema |
 | `ACCESS_SESSION_SECRET` | Sim | Segredo aleatório (≥ 32 bytes) para derivar identificadores de sessão |
-| `ANTHROPIC_API_KEY` | Não | Chave da API Anthropic: habilita as funções de IA (Claude); sem ela, use os prompts para IA externa |
+| `ANTHROPIC_OWN_API_KEY` | Não | Chave própria da Anthropic (console.anthropic.com); usada direto em api.anthropic.com |
+| `ANTHROPIC_WORKSPACE_ID` | Condicional | ID do workspace (`wrkspc_…`), obrigatório para chaves não vinculadas a workspace; ativa a chave própria |
+| `ANTHROPIC_ROUTE` | Não | `own` força a chave própria (chave já vinculada a workspace); `gateway` força o Netlify AI Gateway |
+| `ANTHROPIC_API_KEY` | Não | Injetada automaticamente pelo Netlify AI Gateway (não cadastrar manualmente) |
 | `ANTHROPIC_MODEL` | Não | Modelo Claude (padrão `claude-opus-5-5`) |
 | `ANTHROPIC_FALLBACKS` | Não | `off` desativa o fallback de recusa no servidor (padrão: ativo) |
 
