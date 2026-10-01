@@ -17,7 +17,7 @@ export async function requestOpenAI(key:string,schema:any,instructions:string,in
  const text=result.output?.flatMap((x:any)=>x.content||[]).filter((x:any)=>x.type==='output_text').map((x:any)=>x.text).join('');if(!text)throw Error('A API retornou conteúdo vazio.');
  const parsed=JSON.parse(text);verifyShape(parsed,format);return {value:dropNull(parsed),model:result.model||PEP_AI_MODEL,requestId:result.id,usage:result.usage};
 }
-export async function handlePepAI(request:Request,db:D1Database,key:string){
+export async function handlePepAI(request:Request,db:any,key:string){
  if(request.method!=='POST')return reply({error:'Método não permitido'},405);if(!key)return reply({error:'OPENAI_API_KEY não configurada no servidor. Use o prompt externo.'},503);
  try{
   const raw=await request.text();if(raw.length>8000000)return reply({error:'Entrada excede limite.'},413);const body=JSON.parse(raw),loaded=await loadPep(db);

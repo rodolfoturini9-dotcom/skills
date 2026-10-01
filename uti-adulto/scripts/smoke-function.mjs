@@ -1,0 +1,32 @@
+// Teste de fumaça da função empacotada contra um Postgres real (NETLIFY_DB_URL).
+// Uso: NETLIFY_DB_URL=postgres://... node scripts/smoke-function.mjs [arquivo-da-função]
+import assert from 'node:assert/strict';
+const file=process.argv[2]||'../.sites-runtime/fn/uti.mjs';
+process.env.ACCESS_PASSWORD??='smoke-test-password';process.env.ACCESS_SESSION_SECRET??='smoke-test-secret-0123456789abcdef';
+const {default:fn}=await import(new URL(file,import.meta.url).href);
+const base='https://smoke.test';
+const call=(path,init={})=>fn(new Request(base+path,init));
+assert.equal((await call('/')).status,200,'página de login');
+assert.match(await (await call('/')).text(),/Senha de acesso/);
+assert.equal((await call('/api/pep')).status,401);
+const login=await call('/auth/login',{method:'POST',headers:{Origin:base,'Content-Type':'application/x-www-form-urlencoded'},body:'password='+encodeURIComponent(process.env.ACCESS_PASSWORD)});
+assert.equal(login.status,303);
+const cookie=login.headers.get('set-cookie').split(';')[0];
+const page=await call('/',{headers:{cookie}});assert.equal(page.status,200);assert.match(await page.text(),/<div id="root">/);
+const pep=await (await call('/api/pep',{headers:{cookie}})).json();
+const bedId=Object.keys(pep.state.beds).find(id=>pep.state.beds[id].status==='empty');
+const save=await call('/api/pep',{method:'POST',headers:{cookie,Origin:base,'Content-Type':'application/json'},body:JSON.stringify({version:pep.version,sourceToken:pep.sourceToken,requestId:'smoke-'+crypto.randomUUID(),actions:[{type:'UPDATE_BED',bedId,patch:{patientName:'PACIENTE SINTÉTICO SMOKE'}}]})});
+assert.equal(save.status,200,await save.clone().text());
+const reloaded=await (await call('/api/pep',{headers:{cookie}})).json();
+assert.equal(reloaded.state.beds[bedId].patientName,'PACIENTE SINTÉTICO SMOKE');
+const b=reloaded.state.beds[bedId];
+const cell=await call('/api/pep',{method:'POST',headers:{cookie,Origin:base,'Content-Type':'application/json'},body:JSON.stringify({version:reloaded.version,sourceToken:reloaded.sourceToken,requestId:'smoke-'+crypto.randomUUID(),actions:[{type:'SET_DATE',bedId,patientId:b.patientId,episodeId:b.episodeId,day:0,value:'2026-10-01',cascade:false},{type:'SET_CELL',bedId,patientId:b.patientId,episodeId:b.episodeId,day:0,row:7,slot:0,value:'1500'}]})});
+assert.equal(cell.status,200,await cell.clone().text());
+const icu=await (await call('/api/icu',{headers:{cookie}})).json();
+assert.ok(icu.patients.some(p=>p.name==='PACIENTE SINTÉTICO SMOKE'),'API legada lê o mesmo paciente');
+const backup=await (await call('/api/clinical?op=backup',{headers:{cookie}})).json();
+assert.equal(backup.format,'uti-backup-v2');assert.ok(backup.tables.daily_sheets.length>=1);
+const logout=await call('/auth/logout',{method:'POST',headers:{cookie,Origin:base}});assert.equal(logout.status,303);
+assert.equal((await call('/api/pep',{headers:{cookie}})).status,401);
+console.log('SMOKE OK: login, página, salvamento, ficha, API legada, backup e logout.');
+process.exit(0);

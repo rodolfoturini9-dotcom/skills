@@ -8,18 +8,21 @@
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
+    "build": "vite build && node scripts/embed-pages.mjs",
     "preview": "vite preview",
-    "db:migrate": "node --env-file=.env scripts/migrate-netlify.mjs",
+    "test": "node --import tsx --test tests/*.test.mjs && node --import tsx core-checks.mjs && node --import tsx ficha-history-checks.mjs && node --import tsx handoff-checks.mjs && node --import tsx prescricao-checks.mjs",
     "test:netlify": "node --import tsx --test tests/netlify-adapter.test.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "deploy": "npx netlify deploy --build --prod"
   },
   "dependencies": {
-    "@libsql/client": "0.18.0",
+    "@netlify/database": "^2.0.1",
+    "pg": "^8.23.1",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@tailwindcss/postcss": "4.2.1",
     "@vitejs/plugin-react": "6.0.2",
     "esbuild": "0.28.2",

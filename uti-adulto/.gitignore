@@ -42,3 +42,8 @@ next-env.d.ts
 /work/
 
 *.tsbuildinfo
+
+# Netlify
+.netlify/
+netlify/functions/_generated/
+.sites-runtime/

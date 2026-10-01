@@ -4,7 +4,7 @@ function validSheet(s:Sheet){
  if(!s||typeof s.patient!=='string'||typeof s.bed!=='string'||typeof s.admission!=='string'||!Array.isArray(s.dates)||s.dates.length<6||s.dates.length>730||s.dates.some(x=>typeof x!=='string'||x.length>20)||(s.sourceText!==undefined&&(typeof s.sourceText!=='string'||s.sourceText.length>40000))||!s.cells||typeof s.cells!=='object'||Array.isArray(s.cells)||Object.keys(s.cells).length>80300) return false;
  return Object.entries(s.cells).every(([k,v])=>/^(0|[1-9]\d{0,2}):([0-9]|[1-4][0-9]|5[0-4]):([01])$/.test(k)&&Number(k.split(':')[0])<s.dates.length&&typeof v==='string'&&v.length<=300);
 }
-export async function handleSheetApi(request:Request,db:D1Database){try{
+export async function handleSheetApi(request:Request,db:any){try{
  const url=new URL(request.url),patientId=url.searchParams.get('patientId')||'';
  if(!/^[\w-]{1,100}$/.test(patientId))return respond({error:'Paciente inválido'},400);
  const patient=await db.prepare('SELECT id,name,bed,admission_at AS admission FROM patients WHERE id=?').bind(patientId).first<{id:string;name:string;bed:string;admission:string}>();
@@ -21,7 +21,7 @@ export async function handleSheetApi(request:Request,db:D1Database){try{
  if((before?.version||0)!==input.version)return respond({error:'A ficha foi alterada em outra aba. Exporte sua cópia e recarregue antes de continuar.',version:before?.version||0},409);
  const now=new Date().toISOString(),version=input.version+1;
  const result=input.version===0
-  ? await db.prepare('INSERT OR IGNORE INTO daily_sheets(patient_id,admission,data,version,updated_at,author) VALUES (?,?,?,?,?,?)').bind(patientId,input.sheet.admission,JSON.stringify(input.sheet),version,now,'Usuário autenticado').run()
+  ? await db.prepare('INSERT INTO daily_sheets(patient_id,admission,data,version,updated_at,author) VALUES (?,?,?,?,?,?) ON CONFLICT (patient_id) DO NOTHING').bind(patientId,input.sheet.admission,JSON.stringify(input.sheet),version,now,'Usuário autenticado').run()
   : await db.prepare('UPDATE daily_sheets SET admission=?,data=?,version=?,updated_at=?,author=? WHERE patient_id=? AND version=?').bind(input.sheet.admission,JSON.stringify(input.sheet),version,now,'Usuário autenticado',patientId,input.version).run();
  if(!result.meta.changes)return respond({error:'Conflito de edição. Recarregue a ficha.'},409);
  await db.prepare('INSERT INTO clinical_audit(patient_id,action,author,at,before,after) VALUES (?,?,?,?,?,?)').bind(patientId,'ficha.save','Usuário autenticado',now,before?.data||null,JSON.stringify(input.sheet)).run();

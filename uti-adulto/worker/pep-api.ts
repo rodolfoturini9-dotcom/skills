@@ -3,10 +3,15 @@ import {calculate} from '../app/pep/core/prescricao.js';
 import {A,icuReducer,createEmptyBed,BED_IDS,hydrate} from '../app/pep/core/icuStore.js';
 import {LEGACY_TABLES,mapLegacy,reconcileLegacy,episodeEntries,projectionForSync} from '../app/pep/core/productionBridge.js';
 const reply=(value:unknown,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
-export async function legacySource(db:D1Database){const source:any={};for(const table of LEGACY_TABLES)source[table]=(await db.prepare(`SELECT * FROM ${table}`).all()).results;return source;}
+// Ordem determinística: o Postgres não garante ordem física; a impressão digital e a
+// reconciliação comparam arrays e dependem de uma ordenação estável por chave.
+const LEGACY_ORDER:Record<string,string>={patients:'id',daily_sheets:'patient_id',clinical_records:'sequence'};
+const legacyKey=(table:string,row:any)=>row[LEGACY_ORDER[table]||'id'];
+export function normalizeSource(source:any){const out:any={};for(const table of LEGACY_TABLES){const rows=[...(source?.[table]||[])];rows.sort((a:any,b:any)=>{const x=legacyKey(table,a),y=legacyKey(table,b);return typeof x==='number'&&typeof y==='number'?x-y:String(x)<String(y)?-1:String(x)>String(y)?1:0;});out[table]=rows;}return out;}
+export async function legacySource(db:any){const source:any={};for(const table of LEGACY_TABLES)source[table]=(await db.prepare(`SELECT * FROM ${table} ORDER BY ${LEGACY_ORDER[table]||'id'}`).all()).results;return normalizeSource(source);}
 const canonical=(x:any):string=>x&&typeof x==='object'?Array.isArray(x)?'['+x.map(canonical).join(',')+']':'{'+Object.keys(x).sort().map(k=>JSON.stringify(k)+':'+canonical(x[k])).join(',')+'}':JSON.stringify(x);
 export async function fingerprint(source:any){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonical(source))))).map(x=>x.toString(16).padStart(2,'0')).join('');}
-export async function loadPep(db:D1Database){
+export async function loadPep(db:any){
  const source=await legacySource(db);
  const row:any=await db.prepare('SELECT * FROM pep_revisions ORDER BY version DESC LIMIT 1').first();
  const state=row?reconcileLegacy(JSON.parse(row.data),JSON.parse(row.source_data),source):mapLegacy(source);
@@ -43,11 +48,9 @@ export function applyAction(state:any,action:any){
  if(action.type===A.SET_CELL&&(!Number.isInteger(action.day)||action.day<0||action.day>5||!Number.isInteger(action.row)||action.row<0||action.row>54||[5,6,11].includes(action.row)||![0,1].includes(action.slot)))throw Error('Célula inválida.');
  return icuReducer(state,action);
 }
-// Compara o conteúdo integral das tabelas legadas dentro da transação; um vínculo/registro
-// alterado entre leitura e commit impede a revisão e todas as escritas derivadas.
-function conjunction(parts:string[]):string{if(!parts.length)return '1';if(parts.length===1)return parts[0];const middle=Math.floor(parts.length/2);return '('+conjunction(parts.slice(0,middle))+' AND '+conjunction(parts.slice(middle))+')';}
-function legacyGuard(source:any){const clauses:string[]=[];for(const table of LEGACY_TABLES){const rows=source[table]||[];clauses.push(`(SELECT COUNT(*) FROM ${table})=json_array_length(json_extract(?, '$.${table}'))`);if(rows.length){const cols=Object.keys(rows[0]);const cmp=conjunction(cols.map(k=>`t."${k}" IS json_extract(j.value,'$.${k}')`));clauses.push(`NOT EXISTS (SELECT 1 FROM json_each(json_extract(?, '$.${table}')) j WHERE NOT EXISTS (SELECT 1 FROM ${table} t WHERE ${cmp}))`);}}return clauses;}
-export async function handlePepApi(request:Request,db:D1Database){let phase='load';try{
+// Dentro de uma transação serializada, relê as tabelas legadas e compara a impressão digital:
+// um vínculo/registro alterado entre a leitura e o commit impede a revisão e todas as escritas.
+export async function handlePepApi(request:Request,db:any){let phase='load';try{
  const loaded=await loadPep(db);
  if(request.method==='GET'){const url=new URL(request.url);if(url.searchParams.get('op')==='backup'){const audit=(await db.prepare('SELECT * FROM clinical_audit').all()).results;const revisions=(await db.prepare('SELECT * FROM pep_revisions ORDER BY version').all()).results;return reply({format:'uti-pep-backup-v1',at:new Date().toISOString(),tables:{...loaded.source,clinical_audit:audit,pep_revisions:revisions},counts:Object.fromEntries(Object.entries({...loaded.source,clinical_audit:audit,pep_revisions:revisions}).map(([k,v]:any)=>[k,v.length]))});}return reply({state:loaded.state,version:loaded.version,sourceToken:loaded.sourceToken});}
  if(request.method!=='POST')return reply({error:'Método não permitido'},405);
@@ -64,11 +67,16 @@ export async function handlePepApi(request:Request,db:D1Database){let phase='loa
   state=applyAction(state,action);
  }validState(state);
  const version=loaded.version+1,operationId=body.requestId||crypto.randomUUID(),now=new Date().toISOString();
- const sync=projectionForSync(state,loaded.source,now);state.legacyPreserved=sync.source;
- const guard=legacyGuard(loaded.source),sourceJson=JSON.stringify(loaded.source);
- const insert=db.prepare(`INSERT INTO pep_revisions(version,operation_id,data,source_data,author,saved_at) SELECT ?,?,?,?,?,? WHERE COALESCE((SELECT MAX(version) FROM pep_revisions),0)=? AND ${conjunction(guard)}`).bind(version,operationId,JSON.stringify(state),JSON.stringify(sync.source),'Usuário autenticado',now,loaded.version,...guard.map(()=>sourceJson));
- const audit=db.prepare('INSERT INTO clinical_audit(patient_id,action,author,at,before,after) SELECT ?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM pep_revisions WHERE version=? AND operation_id=?)').bind(body.actions[0].patientId||'','pep.save','Usuário autenticado',now,JSON.stringify({version:loaded.version}),JSON.stringify({version,actions:body.actions.map((a:any)=>a.type)}),version,operationId);
- phase='commit';const results=await db.batch([insert,...sync.statements.map((s:any)=>db.prepare(s.sql).bind(...s.values,version,operationId)),audit]);
- if(!results[0].meta.changes)return reply({error:'Conflito durante o salvamento. Nenhuma alteração aplicada.'},409);
+ const sync=projectionForSync(state,loaded.source,now);sync.source=normalizeSource(sync.source);state.legacyPreserved=sync.source;
+ phase='commit';
+ const committed=await db.transaction(async(tx:any)=>{
+  const current=await tx.prepare('SELECT COALESCE(MAX(version),0) AS v FROM pep_revisions').first('v');
+  if(Number(current)!==loaded.version||await fingerprint(await legacySource(tx))!==loaded.sourceToken)return false;
+  await tx.prepare('INSERT INTO pep_revisions(version,operation_id,data,source_data,author,saved_at) VALUES (?,?,?,?,?,?)').bind(version,operationId,JSON.stringify(state),JSON.stringify(sync.source),'Usuário autenticado',now).run();
+  for(const s of sync.statements)await tx.prepare(s.sql).bind(...s.values,version,operationId).run();
+  await tx.prepare('INSERT INTO clinical_audit(patient_id,action,author,at,before,after) VALUES (?,?,?,?,?,?)').bind(body.actions[0].patientId||'','pep.save','Usuário autenticado',now,JSON.stringify({version:loaded.version}),JSON.stringify({version,actions:body.actions.map((a:any)=>a.type)})).run();
+  return true;
+ });
+ if(!committed)return reply({error:'Dados alterados em outra sessão durante o salvamento. Nenhuma alteração aplicada; recarregue.'},409);
  phase='reload';const final=await loadPep(db);return reply({state:final.state,version:final.version,sourceToken:final.sourceToken,acknowledgedRequestId:operationId});
- }catch(e){const errorId=crypto.randomUUID(),message=e instanceof Error?e.message:'Falha ao persistir os dados.';console.error('pep.request.failed',JSON.stringify({errorId,phase,method:request.method,category:message.startsWith('D1_')?'database':'validation'}));return reply({error:message,errorId},phase==='commit'||phase==='reload'?503:400);}}
+ }catch(e){const errorId=crypto.randomUUID(),message=e instanceof Error?e.message:'Falha ao persistir os dados.';console.error('pep.request.failed',JSON.stringify({errorId,phase,method:request.method,category:phase==='commit'||phase==='reload'?'database':'validation'}));return reply({error:message,errorId},phase==='commit'||phase==='reload'?503:400);}}

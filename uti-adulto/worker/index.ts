@@ -10,7 +10,7 @@ import { generateEvolution } from "./evolution-api";
 
 interface Env {
   ASSETS: Fetcher;
-  DB: D1Database;
+  DB: any;
   ACCESS_PASSWORD: string;
   ACCESS_SESSION_SECRET: string;
   OPENAI_API_KEY?: string;
@@ -88,7 +88,7 @@ async function hasValidSession(request: Request, env: Env) {
   const id = await sessionId(token, env.ACCESS_SESSION_SECRET);
   const row = await env.DB.prepare("SELECT expires,last_seen FROM access_sessions WHERE id=?").bind(id).first<{expires:number;last_seen:number}>();
   const now = Date.now();
-  if (!row || row.expires <= now || row.last_seen <= now - 15*60*1000) return false;
+  if (!row || Number(row.expires) <= now || Number(row.last_seen) <= now - 15*60*1000) return false;
   if(request.method === "POST" || new URL(request.url).pathname === "/") await env.DB.prepare("UPDATE access_sessions SET last_seen=? WHERE id=?").bind(now,id).run();
   return true;
 }
@@ -130,11 +130,11 @@ const baseWorker = {
       const attemptId=await sessionId(request.headers.get("X-NF-Client-Connection-IP") || "shared",env.ACCESS_SESSION_SECRET);
       const now=Date.now();
       const attempt=await env.DB.prepare("SELECT attempts,reset_at FROM access_attempts WHERE id=?").bind(attemptId).first<{attempts:number;reset_at:number}>();
-      if(attempt && attempt.reset_at>now && attempt.attempts>=10) return loginPage("Muitas tentativas. Aguarde 15 minutos.",429);
+      if(attempt && Number(attempt.reset_at)>now && Number(attempt.attempts)>=10) return loginPage("Muitas tentativas. Aguarde 15 minutos.",429);
       const form = await request.formData();
       const password = String(form.get("password") || "");
       if (!(await passwordMatches(password, env.ACCESS_PASSWORD))) {
-        await env.DB.prepare("INSERT INTO access_attempts(id,attempts,reset_at) VALUES (?,1,?) ON CONFLICT(id) DO UPDATE SET attempts=CASE WHEN reset_at<=? THEN 1 ELSE attempts+1 END,reset_at=CASE WHEN reset_at<=? THEN ? ELSE reset_at END").bind(attemptId,now+900000,now,now,now+900000).run();
+        await env.DB.prepare("INSERT INTO access_attempts(id,attempts,reset_at) VALUES (?,1,?) ON CONFLICT(id) DO UPDATE SET attempts=CASE WHEN access_attempts.reset_at<=? THEN 1 ELSE access_attempts.attempts+1 END,reset_at=CASE WHEN access_attempts.reset_at<=? THEN ? ELSE access_attempts.reset_at END").bind(attemptId,now+900000,now,now,now+900000).run();
         return loginPage("Senha incorreta. Tente novamente.",401);
       }
       await env.DB.prepare("DELETE FROM access_attempts WHERE id=?").bind(attemptId).run();

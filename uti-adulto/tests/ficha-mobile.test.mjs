@@ -4,7 +4,7 @@ import {build} from 'esbuild';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import fs from 'node:fs';
-import {DatabaseSync} from 'node:sqlite';
+import {database as pgDatabase} from './helpers/pg.mjs';
 
 await build({entryPoints:['app/icu/fichaModel.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/tests/ficha-model.mjs'});
 await build({entryPoints:['app/icu/Ficha.tsx'],bundle:true,platform:'node',format:'esm',packages:'external',jsx:'automatic',outfile:'.sites-runtime/tests/ficha-render.mjs'});
@@ -72,14 +72,13 @@ test('após o sexto dia a folha mostra o atual e os cinco anteriores sem apagar 
  const restored=model.mergeBackup(empty(),merged.sheet);assert.equal(restored.sheet.dates.length,7);assert.equal(restored.sheet.cells['0:13:0'],'65');assert.equal(restored.sheet.cells['6:13:0'],'92');
 });
 
-test('D1 salva e relê o sétimo dia com auditoria e controle de versão',async()=>{
- const sql=new DatabaseSync(':memory:');for(const file of fs.readdirSync('drizzle').filter(x=>x.endsWith('.sql')).sort())sql.exec(fs.readFileSync(`drizzle/${file}`,'utf8'));
- sql.prepare('INSERT INTO patients(id,bed,name) VALUES (?,?,?)').run('p1','01','PACIENTE SINTÉTICO');
- const db={prepare(query){let args=[];return {bind(...values){args=values;return this},async first(){return sql.prepare(query).get(...args)||null},async run(){const result=sql.prepare(query).run(...args);return {meta:{changes:Number(result.changes)}}}}}};
+test('Postgres salva e relê o sétimo dia com auditoria e controle de versão',async()=>{
+ const {db,sql}=await pgDatabase();
+ await sql.prepare('INSERT INTO patients(id,bed,name) VALUES (?,?,?)').run('p1','01','PACIENTE SINTÉTICO');
  const sheet=empty();sheet.dates=['28/09/2026','29/09/2026','30/09/2026','01/10/2026','02/10/2026','03/10/2026','04/10/2026'];sheet.cells={'0:13:0':'65','6:13:0':'92'};
  const url='https://unit.test/api/ficha?patientId=p1';const save=version=>handleSheetApi(new Request(url,{method:'POST',body:JSON.stringify({sheet,version})}),db);
  assert.equal((await save(0)).status,200);const loaded=await (await handleSheetApi(new Request(url),db)).json();assert.equal(loaded.sheet.dates.length,7);assert.equal(loaded.sheet.cells['0:13:0'],'65');assert.equal(loaded.sheet.cells['6:13:0'],'92');assert.equal(loaded.version,1);
- assert.equal((await save(0)).status,409);assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM clinical_audit WHERE action='ficha.save'").get().n,1);
+ assert.equal((await save(0)).status,409);assert.equal((await sql.prepare("SELECT COUNT(*) AS n FROM clinical_audit WHERE action='ficha.save'").get()).n,1);
 });
 test('prompt externo expõe o mapa de 55 linhas e a janela da ficha sem deslocar data identificada',()=>{
  const s=empty();s.dates=['28/09/2026','29/09/2026','30/09/2026','01/10/2026','02/10/2026','03/10/2026','04/10/2026'];

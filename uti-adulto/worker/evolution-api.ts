@@ -23,7 +23,7 @@ export function assembleEvolution(fields:Fields,identity:{name:string;bed:string
  };
  return {text,print,fields};
 }
-export async function generateEvolution(request:Request,db:D1Database,key:string):Promise<Response>{
+export async function generateEvolution(request:Request,db:any,key:string):Promise<Response>{
  if(request.method!=='POST')return json({error:'Método não permitido.'},405);
  if(!key)return json({error:'Geração por IA indisponível. Verifique a configuração da chave.'},503);
  try{

@@ -36,9 +36,9 @@ const patientSelect = `SELECT
   diet, glucose, labs, devices, vte, stress_ulcer AS stressUlcer, skin_mobility AS skinMobility,
   abcdef, sofa2, goals_of_care AS goalsOfCare, today_goals AS todayGoals, handoff, contingency,
   archived, created_at AS createdAt, updated_at AS updatedAt
-  FROM patients ORDER BY bed COLLATE NOCASE, name COLLATE NOCASE`;
+  FROM patients ORDER BY lower(bed), lower(name), id`;
 
-async function getSnapshot(db: D1Database, aiAvailable = false) {
+async function getSnapshot(db: any, aiAvailable = false) {
   const [patientResult, taskResult, eventResult, evolutionResult, goalResult, documentResult, prescriberResult, medicationResult] = await db.batch([
     db.prepare(patientSelect),
     db.prepare(`SELECT id, patient_id AS patientId, text, priority, due_at AS dueAt, completed,
@@ -57,11 +57,11 @@ async function getSnapshot(db: D1Database, aiAvailable = false) {
       prescriber_name AS prescriberName, prescriber_crm AS prescriberCrm,
       created_at AS createdAt, updated_at AS updatedAt
       FROM medical_documents ORDER BY document_date DESC, updated_at DESC, id DESC LIMIT 1000`),
-    db.prepare(`SELECT id, name, crm, created_at AS createdAt FROM prescribers ORDER BY name COLLATE NOCASE, crm COLLATE NOCASE`),
+    db.prepare(`SELECT id, name, crm, created_at AS createdAt FROM prescribers ORDER BY lower(name), lower(crm), id`),
     db.prepare(`SELECT id, name, text, weight_based AS weightBased, unit,
       min_dose AS minDose, max_dose AS maxDose, concentration, concentration_unit AS concentrationUnit,
       formula, notes, created_at AS createdAt
-      FROM custom_medications ORDER BY name COLLATE NOCASE, id`),
+      FROM custom_medications ORDER BY lower(name), id`),
   ]);
 
   return {
@@ -158,7 +158,7 @@ async function analyzeClinicalText(text: string, date: string, apiKey: string) {
   return JSON.parse(outputText) as { patient?: Record<string, unknown>; dailyGoals?: unknown[]; day?: {date?:unknown;cells?:unknown} };
 }
 
-export async function handleIcuApi(request: Request, db: D1Database, openAiKey = ""): Promise<Response> {
+export async function handleIcuApi(request: Request, db: any, openAiKey = ""): Promise<Response> {
   try {
 
 
@@ -386,7 +386,7 @@ export async function handleIcuApi(request: Request, db: D1Database, openAiKey =
       const crm = clean(body.crm).toUpperCase();
       if (!name || !crm) return json({ error: "Nome e CRM são obrigatórios." }, 400);
       if (name.length > 160 || crm.length > 50) return json({ error: "Nome ou CRM excede o limite permitido." }, 400);
-      const existing = await db.prepare(`SELECT id FROM prescribers WHERE name = ? COLLATE NOCASE AND crm = ? COLLATE NOCASE LIMIT 1`).bind(name, crm).first();
+      const existing = await db.prepare(`SELECT id FROM prescribers WHERE lower(name) = lower(?) AND lower(crm) = lower(?) LIMIT 1`).bind(name, crm).first();
       if (existing) return json({ ok: true, id: existing.id });
       const result = await db.prepare(`INSERT INTO prescribers (name, crm) VALUES (?, ?)`).bind(name, crm).run();
       return json({ ok: true, id: result.meta.last_row_id }, 201);

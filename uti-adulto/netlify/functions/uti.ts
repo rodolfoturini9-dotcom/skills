@@ -1,17 +1,20 @@
-import {readFile} from 'node:fs/promises';
-import path from 'node:path';
 import worker from '../../worker/index';
 import {getDatabase} from '../../server/database.mjs';
+import pages from './_generated/pages.mjs';
+
+// Rotas HTML do aplicativo: servidas somente após validação da sessão pelo worker.
+const PAGE_ROUTES:Record<string,string>={'/':'index.html','/index.html':'index.html','/legado':'index.html','/ficha-uti':'index.html','/ficha-uti/':'index.html','/ficha-uti/index.html':'ficha-uti/index.html','/ficha-uti-integrada.html':'ficha-uti-integrada.html'};
+const assets={async fetch(request:Request){
+ const page=PAGE_ROUTES[new URL(request.url).pathname];
+ const html=page?(pages as Record<string,string>)[page]:undefined;
+ return html?new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8'}}):new Response('Página não encontrada',{status:404});
+}};
+
 export default async function(request:Request){
- try {
- const env:any={DB:getDatabase(),ACCESS_PASSWORD:process.env.ACCESS_PASSWORD,ACCESS_SESSION_SECRET:process.env.ACCESS_SESSION_SECRET,OPENAI_API_KEY:process.env.OPENAI_API_KEY,ASSETS:{async fetch(req:Request){
- const pathname=decodeURIComponent(new URL(req.url).pathname);
- const root=path.resolve('dist');
- const target=path.resolve(root,['/','/legado','/ficha-uti','/ficha-uti/'].includes(pathname)?'index.html':'.'+pathname+(pathname.endsWith('/')?'index.html':''));
- if(target!==root&&!target.startsWith(root+path.sep))return new Response('Acesso negado',{status:403});
- try {return new Response(await readFile(target),{headers:{'Content-Type':target.endsWith('.html')?'text/html; charset=utf-8':'application/octet-stream'}});}catch{return new Response('Página não encontrada',{status:404});}
- }}};
- return await worker.fetch(request,env,{waitUntil:()=>{},passThroughOnException:()=>{}});
- }catch {return new Response('Configure o banco e as variáveis de ambiente conforme LEIA-ME-NETLIFY.md.',{status:503,headers:{'Cache-Control':'no-store'}});}
+ let db;
+ try{db=await getDatabase();}
+ catch(error){console.error('uti.database.unavailable',error instanceof Error?error.name:'unknown');return new Response('Banco de dados indisponível. Verifique o Netlify Database do site.',{status:503,headers:{'Cache-Control':'no-store'}});}
+ const env={DB:db,ACCESS_PASSWORD:process.env.ACCESS_PASSWORD||'',ACCESS_SESSION_SECRET:process.env.ACCESS_SESSION_SECRET||'',OPENAI_API_KEY:process.env.OPENAI_API_KEY||'',ASSETS:assets};
+ return worker.fetch(request,env as any,{waitUntil:()=>{},passThroughOnException:()=>{}});
 }
-export const config={path:['/','/legado','/ficha-uti','/api/*','/auth/*','/ficha-uti/*','/ficha-uti-integrada.html']};
+export const config={path:['/','/index.html','/legado','/ficha-uti','/ficha-uti/','/ficha-uti/index.html','/ficha-uti-integrada.html','/api/*','/auth/*']};
