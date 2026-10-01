@@ -1,3 +1,4 @@
+import type {Database} from './db';
 import {extractionInstructions} from "../app/clinical/prompts";
 import {fichaFields} from "../app/clinical/model";
 type PatientInput = Record<string, unknown>;
@@ -38,7 +39,7 @@ const patientSelect = `SELECT
   archived, created_at AS createdAt, updated_at AS updatedAt
   FROM patients ORDER BY lower(bed), lower(name), id`;
 
-async function getSnapshot(db: any, aiAvailable = false) {
+async function getSnapshot(db: Database, aiAvailable = false) {
   const [patientResult, taskResult, eventResult, evolutionResult, goalResult, documentResult, prescriberResult, medicationResult] = await db.batch([
     db.prepare(patientSelect),
     db.prepare(`SELECT id, patient_id AS patientId, text, priority, due_at AS dueAt, completed,
@@ -158,7 +159,7 @@ async function analyzeClinicalText(text: string, date: string, apiKey: string) {
   return JSON.parse(outputText) as { patient?: Record<string, unknown>; dailyGoals?: unknown[]; day?: {date?:unknown;cells?:unknown} };
 }
 
-export async function handleIcuApi(request: Request, db: any, openAiKey = ""): Promise<Response> {
+export async function handleIcuApi(request: Request, db: Database, openAiKey = ""): Promise<Response> {
   try {
 
 

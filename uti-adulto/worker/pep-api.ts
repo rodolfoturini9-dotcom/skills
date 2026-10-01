@@ -1,3 +1,4 @@
+import type {Database} from './db';
 import {mergeBackup} from '../app/pep/core/backupMerge.js';
 import {calculate} from '../app/pep/core/prescricao.js';
 import {A,icuReducer,createEmptyBed,BED_IDS,hydrate} from '../app/pep/core/icuStore.js';
@@ -8,10 +9,10 @@ const reply=(value:unknown,status=200)=>Response.json(value,{status,headers:{'Ca
 const LEGACY_ORDER:Record<string,string>={patients:'id',daily_sheets:'patient_id',clinical_records:'sequence'};
 const legacyKey=(table:string,row:any)=>row[LEGACY_ORDER[table]||'id'];
 export function normalizeSource(source:any){const out:any={};for(const table of LEGACY_TABLES){const rows=[...(source?.[table]||[])];rows.sort((a:any,b:any)=>{const x=legacyKey(table,a),y=legacyKey(table,b);return typeof x==='number'&&typeof y==='number'?x-y:String(x)<String(y)?-1:String(x)>String(y)?1:0;});out[table]=rows;}return out;}
-export async function legacySource(db:any){const source:any={};for(const table of LEGACY_TABLES)source[table]=(await db.prepare(`SELECT * FROM ${table} ORDER BY ${LEGACY_ORDER[table]||'id'}`).all()).results;return normalizeSource(source);}
+export async function legacySource(db:Pick<Database,'prepare'>){const source:any={};for(const table of LEGACY_TABLES)source[table]=(await db.prepare(`SELECT * FROM ${table} ORDER BY ${LEGACY_ORDER[table]||'id'}`).all()).results;return normalizeSource(source);}
 const canonical=(x:any):string=>x&&typeof x==='object'?Array.isArray(x)?'['+x.map(canonical).join(',')+']':'{'+Object.keys(x).sort().map(k=>JSON.stringify(k)+':'+canonical(x[k])).join(',')+'}':JSON.stringify(x);
 export async function fingerprint(source:any){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonical(source))))).map(x=>x.toString(16).padStart(2,'0')).join('');}
-export async function loadPep(db:any){
+export async function loadPep(db:Pick<Database,'prepare'>){
  const source=await legacySource(db);
  const row:any=await db.prepare('SELECT * FROM pep_revisions ORDER BY version DESC LIMIT 1').first();
  const state=row?reconcileLegacy(JSON.parse(row.data),JSON.parse(row.source_data),source):mapLegacy(source);
@@ -50,9 +51,9 @@ export function applyAction(state:any,action:any){
 }
 // Dentro de uma transação serializada, relê as tabelas legadas e compara a impressão digital:
 // um vínculo/registro alterado entre a leitura e o commit impede a revisão e todas as escritas.
-export async function handlePepApi(request:Request,db:any){let phase='load';try{
+export async function handlePepApi(request:Request,db:Database){let phase='load';try{
  const loaded=await loadPep(db);
- if(request.method==='GET'){const url=new URL(request.url);if(url.searchParams.get('op')==='backup'){const audit=(await db.prepare('SELECT * FROM clinical_audit').all()).results;const revisions=(await db.prepare('SELECT * FROM pep_revisions ORDER BY version').all()).results;return reply({format:'uti-pep-backup-v1',at:new Date().toISOString(),tables:{...loaded.source,clinical_audit:audit,pep_revisions:revisions},counts:Object.fromEntries(Object.entries({...loaded.source,clinical_audit:audit,pep_revisions:revisions}).map(([k,v]:any)=>[k,v.length]))});}return reply({state:loaded.state,version:loaded.version,sourceToken:loaded.sourceToken});}
+ if(request.method==='GET'){const url=new URL(request.url);if(url.searchParams.get('op')==='meta')return reply({version:loaded.version,sourceToken:loaded.sourceToken});if(url.searchParams.get('op')==='backup'){const audit=(await db.prepare('SELECT * FROM clinical_audit').all()).results;const revisions=(await db.prepare('SELECT * FROM pep_revisions ORDER BY version').all()).results;return reply({format:'uti-pep-backup-v1',at:new Date().toISOString(),tables:{...loaded.source,clinical_audit:audit,pep_revisions:revisions},counts:Object.fromEntries(Object.entries({...loaded.source,clinical_audit:audit,pep_revisions:revisions}).map(([k,v]:any)=>[k,v.length]))});}return reply({state:loaded.state,version:loaded.version,sourceToken:loaded.sourceToken});}
  if(request.method!=='POST')return reply({error:'Método não permitido'},405);
  const text=await request.text();if(text.length>3000000)return reply({error:'Entrada muito extensa'},413);const body=JSON.parse(text);
  if(body.requestId){const acknowledged=await db.prepare('SELECT version FROM pep_revisions WHERE operation_id=?').bind(body.requestId).first();if(acknowledged)return reply({state:loaded.state,version:loaded.version,sourceToken:loaded.sourceToken,acknowledgedRequestId:body.requestId,replayed:true,savedVersion:acknowledged.version});}

@@ -1,10 +1,11 @@
+import type {Database} from './db';
 import { kinds, validate, type ClinicalRecord, type Kind } from '../app/clinical/model';
 const tables=['patients','tasks','events','evolutions','daily_goals','medical_documents','prescribers','custom_medications','clinical_records','daily_sheets','clinical_audit'];
 const IDENTITY:Record<string,string>={tasks:'id',events:'id',evolutions:'id',daily_goals:'id',medical_documents:'id',prescribers:'id',custom_medications:'id',clinical_records:'sequence',clinical_audit:'id'};
 const reply=(value:unknown,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const decode=(r:any):ClinicalRecord=>({id:r.id,patientId:r.patient_id,kind:r.kind,date:r.date,version:r.version,status:r.status,data:JSON.parse(r.data),author:r.author,source:r.source,savedAt:r.saved_at});
 function check(r:any){if(!r||typeof r.id!=='string'||r.id.length>100||typeof r.patientId!=='string'||!Object.hasOwn(kinds,r.kind)||!['draft','final'].includes(r.status)||typeof r.date!=='string'||!/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(r.date)||!Number.isFinite(Date.parse(r.date)))throw Error('Registro inválido');if(new Date(r.date.slice(0,10)+'T12:00:00Z').toISOString().slice(0,10)!==r.date.slice(0,10))throw Error('Data inexistente');if(!r.data||Array.isArray(r.data)||typeof r.data!=='object'||Object.keys(r.data).length>300||Object.entries(r.data).some(([k,v])=>['__proto__','constructor','prototype'].includes(k)||typeof v!=='string')||JSON.stringify(r.data).length>200000)throw Error('Conteúdo inválido');const errors=validate(r.kind as Kind,r.data);if(errors.length)throw Error(errors.join('; '));}
-export async function handleClinicalApi(request:Request,db:any){try{
+export async function handleClinicalApi(request:Request,db:Database){try{
  const url=new URL(request.url);
  if(request.method==='GET'){
   if(url.searchParams.get('op')==='backup'){const data:Record<string,unknown>={};for(const t of tables)data[t]=(await db.prepare(`SELECT * FROM ${t}`).all()).results;await db.prepare("INSERT INTO clinical_audit(patient_id,action,author,at) VALUES ('','backup_export','Usuário autenticado',?)").bind(new Date().toISOString()).run();return reply({format:'uti-backup-v2',at:new Date().toISOString(),tables:data});}

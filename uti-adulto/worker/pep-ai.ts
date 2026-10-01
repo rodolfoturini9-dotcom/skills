@@ -1,3 +1,4 @@
+import type {Database} from './db';
 import {loadPep,fingerprint} from './pep-api';
 import {mergeDailyRecords} from '../app/pep/core/dailyHistory.js';
 import {handoffSources,HANDOFF_RULES,HANDOFF_FIELDS,validateHandoffResponse} from '../app/pep/core/handoffGeneration.js';
@@ -11,13 +12,13 @@ function dropNull(value:any):any{if(Array.isArray(value))return value.map(dropNu
 function verifyShape(value:any,schema:any,path='resposta'){if(schema.anyOf){if(value===null)return;return verifyShape(value,schema.anyOf[0],path);}if(schema.type==='object'){if(!value||Array.isArray(value)||typeof value!=='object'||Object.keys(value).some(k=>!Object.hasOwn(schema.properties,k))||schema.required.some((k:string)=>!Object.hasOwn(value,k)))throw Error('Estrutura inválida em '+path);for(const [k,v]of Object.entries(value))verifyShape(v,schema.properties[k],path+'.'+k);}else if(schema.type==='array'){if(!Array.isArray(value)||value.length>3000)throw Error('Lista inválida em '+path);for(const v of value)verifyShape(v,schema.items,path);}else if(schema.type==='string'){if(typeof value!=='string'||value.length>120000||schema.enum&&!schema.enum.includes(value))throw Error('Texto inválido em '+path);}else if(schema.type==='integer'&&!Number.isInteger(value))throw Error('Número inválido em '+path);}
 export async function requestOpenAI(key:string,schema:any,instructions:string,input:any,signal?:AbortSignal){
  const format=strictSchema(schema);
- const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model:PEP_AI_MODEL,store:false,max_output_tokens:16000,instructions,input:typeof input==='string'||Array.isArray(input)?input:JSON.stringify(input),text:{format:{type:'json_schema',name:'pep_clinical_agent',strict:true,schema:format}}}),signal:signal||AbortSignal.timeout(90000)});
+ const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model:PEP_AI_MODEL,store:false,max_output_tokens:16000,instructions,input:typeof input==='string'||Array.isArray(input)?input:JSON.stringify(input),text:{format:{type:'json_schema',name:'pep_clinical_agent',strict:true,schema:format}}}),signal:signal||AbortSignal.timeout(55000)});
  if(!response.ok)throw Error(response.status===429?'Limite da API atingido. Tente novamente.':'A API não confirmou a geração. Revise a configuração do serviço.');
  const result:any=await response.json();if(result.status!=='completed'&&result.status!==undefined||result.incomplete_details)throw Error('Resposta incompleta. Gere para um paciente por vez.');
  const text=result.output?.flatMap((x:any)=>x.content||[]).filter((x:any)=>x.type==='output_text').map((x:any)=>x.text).join('');if(!text)throw Error('A API retornou conteúdo vazio.');
  const parsed=JSON.parse(text);verifyShape(parsed,format);return {value:dropNull(parsed),model:result.model||PEP_AI_MODEL,requestId:result.id,usage:result.usage};
 }
-export async function handlePepAI(request:Request,db:any,key:string){
+export async function handlePepAI(request:Request,db:Database,key:string){
  if(request.method!=='POST')return reply({error:'Método não permitido'},405);if(!key)return reply({error:'OPENAI_API_KEY não configurada no servidor. Use o prompt externo.'},503);
  try{
   const raw=await request.text();if(raw.length>8000000)return reply({error:'Entrada excede limite.'},413);const body=JSON.parse(raw),loaded=await loadPep(db);

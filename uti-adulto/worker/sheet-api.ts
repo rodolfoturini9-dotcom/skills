@@ -1,10 +1,11 @@
+import type {Database} from './db';
 const respond=(value:unknown,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 type Sheet={patient:string;admission:string;bed:string;dates:string[];cells:Record<string,string>;sourceText?:string};
 function validSheet(s:Sheet){
  if(!s||typeof s.patient!=='string'||typeof s.bed!=='string'||typeof s.admission!=='string'||!Array.isArray(s.dates)||s.dates.length<6||s.dates.length>730||s.dates.some(x=>typeof x!=='string'||x.length>20)||(s.sourceText!==undefined&&(typeof s.sourceText!=='string'||s.sourceText.length>40000))||!s.cells||typeof s.cells!=='object'||Array.isArray(s.cells)||Object.keys(s.cells).length>80300) return false;
  return Object.entries(s.cells).every(([k,v])=>/^(0|[1-9]\d{0,2}):([0-9]|[1-4][0-9]|5[0-4]):([01])$/.test(k)&&Number(k.split(':')[0])<s.dates.length&&typeof v==='string'&&v.length<=300);
 }
-export async function handleSheetApi(request:Request,db:any){try{
+export async function handleSheetApi(request:Request,db:Database){try{
  const url=new URL(request.url),patientId=url.searchParams.get('patientId')||'';
  if(!/^[\w-]{1,100}$/.test(patientId))return respond({error:'Paciente inválido'},400);
  const patient=await db.prepare('SELECT id,name,bed,admission_at AS admission FROM patients WHERE id=?').bind(patientId).first<{id:string;name:string;bed:string;admission:string}>();

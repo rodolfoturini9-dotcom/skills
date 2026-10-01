@@ -8,7 +8,7 @@ export function Icon({ name, className = '' }) {
 }
 export default function Layout({route,onNavigate,title,children}) {
  const {activeBed:bed,census,saveStatus}=useICU();
- const save={saving:'Salvando…',saved:'Salvo no servidor',error:'Falha ao salvar — exporte um backup',idle:'Carregando registros'}[saveStatus];
+ const save={saving:'Salvando…',saved:'Salvo no servidor',error:'Falha ao salvar — exporte o rascunho',idle:'Carregando registros',loading:'Carregando registros'}[saveStatus];
  return <div className="app-shell">
   <aside className="app-sidebar no-print">
    <div className="brand"><span className="brand-mark">H<span>+</span></span><div><strong>HRIV</strong><small>Medicina intensiva</small></div></div>
@@ -17,7 +17,7 @@ export default function Layout({route,onNavigate,title,children}) {
    <div className="sidebar-census"><span>Ocupação da unidade</span><strong>{census.occupied}<small> / {census.total}</small></strong><div className="occupancy-track"><i style={{width:`${census.occupied*10}%`}}/></div></div>
    <div className="sidebar-bottom"><span>LEITO ATIVO</span><b>{bed.bedId} · {bed.patientName || 'Vago'}</b><small>Hospital Regional de Ivaiporã</small><a href="/legado">Ferramentas anteriores</a><a href="/auth/logout">Encerrar sessão</a></div>
   </aside>
-  <div className="app-workspace"><header className="app-header no-print"><div><div className="header-context">UTI Adulto <span>/</span> Prontuário eletrônico</div><h1>{title}</h1></div><div className="header-meta"><time>{isoToBR(todayISO())}</time><span role="status" className={saveStatus==='error'?'save-error':''}>{save}</span></div></header>
+  <div className="app-workspace"><header className="app-header no-print"><div><div className="header-context">UTI Adulto <span>/</span> Prontuário eletrônico</div><h1>{title}</h1></div><div className="header-meta"><time>{isoToBR(todayISO())}</time><span role="status" className={saveStatus==='error'?'save-error':''}>{save}</span><a className="header-logout" href="/auth/logout">Sair</a></div></header>
    {route!=='leitos' && bed.status!=='empty' && <div className="active-patient-strip no-print"><span className="bed-mini">{bed.bedId}</span><b>{bed.patientName}</b><span>{[bed.age && `${bed.age} anos`,bed.diUti && `DI-UTI ${bed.diUti}`].filter(Boolean).join(' · ')}</span><button onClick={()=>onNavigate('leitos')}>Trocar paciente</button></div>}
    <main className="app-main">{children}</main>
   </div>

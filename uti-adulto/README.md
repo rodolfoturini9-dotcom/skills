@@ -1,84 +1,46 @@
-# UTI Adulto — Gestão de Plantão: publicação no Netlify
+# UTI Adulto — Gestão de Plantão (HRIV)
 
-Este pacote contém o sistema da revisão d359b1a6f39b344233775286083465b3ed5a4422, com adaptação para Vite, Netlify Functions e banco SQLite remoto Turso. Inclui telas, ficha diária, evolução, passagem de plantão, prescrição, impressão, importação de backup, APIs, autenticação, auditoria e integrações de IA existentes. O código e as migrações da versão original estão incluídos; arquivos de configuração originais estão em original-sites/.
+Prontuário de plantão para UTI adulto: mapa de 10 leitos, ficha diária, evolução, passagem de plantão, prescrição com diluições, impressão A4, importação/exportação de backup, auditoria e integrações opcionais de IA (OpenAI).
 
-## Antes de começar
+## Arquitetura
 
-Instale Node.js 22.13 ou superior. Crie uma conta Netlify e um banco Turso em https://turso.tech. Copie a URL libsql e gere um token de acesso ao banco. Não reutilize o banco gerenciado pelo ChatGPT: os identificadores e credenciais dessa hospedagem não são exportados pelo código.
+| Camada | Tecnologia |
+| --- | --- |
+| Interface | React 19 + Vite (SPA em `app/pep`; ferramentas anteriores em `/legado`) |
+| Servidor | Uma Netlify Function (`netlify/functions/uti.ts`) que executa o roteador em `worker/` |
+| Banco em nuvem | Netlify Database (PostgreSQL gerenciado), provisionado automaticamente |
+| Migrações | `netlify/database/migrations/*/migration.sql`, aplicadas pelo Netlify a cada deploy |
+| Acesso | Senha única + cookie de sessão HttpOnly/Secure/SameSite=Strict, expiração por inatividade (15 min) e limite de 10 tentativas/15 min por IP |
 
-Os registros de pacientes, o histórico do banco em produção, sessões, senhas e chaves API não estão no ZIP. Exporte o backup pelo sistema original antes de mudar de endereço. Após publicar, importe esse JSON na função de backup/importação do novo sistema. Essa operação migra os dados contidos no backup; não equivale a uma cópia integral de todas as tabelas internas do banco original. Mantenha o original até conferir o resultado.
+Os arquivos JS/CSS de `dist/assets` são públicos (somente código). As páginas HTML e todas as rotas `/api/*` passam pela função e exigem sessão válida.
 
-## 1. Instalar e criar as tabelas
+## Variáveis de ambiente (Netlify → Project configuration → Environment variables)
 
-Extraia o ZIP, abra o terminal nesta pasta e execute:
+| Variável | Obrigatória | Conteúdo |
+| --- | --- | --- |
+| `ACCESS_PASSWORD` | Sim | Senha de acesso ao sistema |
+| `ACCESS_SESSION_SECRET` | Sim | Segredo aleatório (≥ 32 bytes) para derivar identificadores de sessão |
+| `OPENAI_API_KEY` | Não | Habilita as funções de IA integradas; sem ela, use os prompts para IA externa |
+
+O banco não exige variável manual: o Netlify Database injeta a conexão na função.
+
+## Desenvolvimento e verificação
 
 ```bash
 npm ci
+npm run build        # Vite + embute as páginas HTML na função
+npm test             # 75 testes (Postgres real via PGlite) + verificações de domínio
+npm run typecheck
+node scripts/verify-ui.mjs   # E2E de interface (Playwright/Chromium), desktop e celular
+NETLIFY_DB_URL=postgres://... node scripts/smoke-function.mjs   # função empacotada contra Postgres real
 ```
 
-Copie .env.example para .env e preencha TURSO_DATABASE_URL e TURSO_AUTH_TOKEN. Execute:
+## Publicação
 
-```bash
-npm run db:migrate
-```
+O deploy de produção roda `npm run build`, aplica as migrações no banco de produção e publica `dist` + a função. Deploy previews recebem uma ramificação isolada do banco.
 
-O comando cria todas as tabelas em ordem e registra as migrações aplicadas. Pode ser executado novamente sem reaplicar as já registradas. Use um banco novo e vazio; não aplique as migrações sobre um banco preexistente sem conferir seu esquema.
+## Migração de dados de outra instalação
 
-## 2. Configurar os segredos no Netlify
+Exporte o backup no sistema anterior (`Exportar backup`) e importe no novo (`Importar`). A importação valida e incorpora registros sem sobrescrever pacientes existentes. As migrações SQLite originais estão em `original-sites/drizzle-sqlite/` apenas como referência.
 
-No painel do site, abra Environment variables e cadastre com acesso às Functions:
-
-| Variável | Conteúdo |
-| --- | --- |
-| TURSO_DATABASE_URL | URL libsql do banco Turso |
-| TURSO_AUTH_TOKEN | Token do banco |
-| ACCESS_PASSWORD | Uma senha de acesso definida por você |
-| ACCESS_SESSION_SECRET | Segredo aleatório de pelo menos 32 bytes |
-| OPENAI_API_KEY | Sua chave de API para as funções de IA, opcional |
-
-Para gerar o segredo, execute `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Mantenha a senha e os tokens apenas no arquivo .env local e nas variáveis do Netlify. Nenhuma variável deve receber prefixo VITE_. Sem o banco e os segredos de acesso, o servidor retorna 503. Sem a chave OpenAI, use o preenchimento manual e os prompts para IA externa.
-
-## 3. Publicar
-
-Opção por repositório: envie esta pasta a um repositório privado, importe-o no Netlify e use:
-
-- Comando de build: `npm run build`.
-- Pasta publicada: `dist`.
-- Pasta das funções: `netlify/functions`.
-- Node: 22.
-
-O arquivo netlify.toml já configura esses valores. Cadastre as variáveis e publique novamente.
-
-Opção por terminal:
-
-```bash
-npx netlify login
-npx netlify init
-```
-
-Após vincular/criar o site, cadastre as variáveis no painel e execute:
-
-```bash
-npx netlify deploy --build --prod
-```
-
-Não publique apenas a pasta dist por arrastar e soltar: esse modo não instala o servidor nem conecta o banco. O sistema completo precisa das Functions.
-
-## 4. Conferir e importar os registros
-
-Abra o endereço HTTPS, entre com a senha escolhida, cadastre um registro de teste e confirme que persiste após recarregar. Confira também o acesso em outro dispositivo, o logout, a impressão A4 e as funções de IA com sua chave. Depois, importe o backup exportado do sistema original e revise os pacientes e históricos antes de usar a nova instalação.
-
-## Verificação técnica
-
-```bash
-npm run build
-npm run test:netlify
-```
-
-O teste valida a aplicação das migrações, queries parametrizadas, rollback de lote, login, proteção de origem, bloqueio de sessão e leitura do prontuário. A publicação e conexões reais ao Netlify, Turso e OpenAI dependem das suas credenciais e precisam ser conferidas depois do deploy. Funções síncronas e tamanho de uploads seguem os limites do seu plano Netlify; imagens muito grandes e gerações longas podem excedê-los.
-
-## Referências
-
-- https://docs.netlify.com/build/functions/get-started/
-- https://docs.netlify.com/build/functions/configuration/
-- https://github.com/tursodatabase/libsql-client-ts
+Relatório da análise e correções: `docs/ANALISE-E-CORRECOES.md`.

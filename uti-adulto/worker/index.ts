@@ -1,3 +1,4 @@
+import type {Database} from './db';
 /** Cloudflare Worker entry point for the vinext-starter template. */
 
 
@@ -9,8 +10,8 @@ import {handlePepAI} from './pep-ai';
 import { generateEvolution } from "./evolution-api";
 
 interface Env {
-  ASSETS: Fetcher;
-  DB: any;
+  ASSETS: { fetch(request: Request): Promise<Response> | Response };
+  DB: Database;
   ACCESS_PASSWORD: string;
   ACCESS_SESSION_SECRET: string;
   OPENAI_API_KEY?: string;
