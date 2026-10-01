@@ -9,7 +9,7 @@ import {handlePepApi} from './pep-api';
 import {handlePepAI} from './pep-ai';
 import { generateEvolution } from "./evolution-api";
 import { handleAssistant } from "./assistant";
-import { configFromEnv, claudePing, ClaudeError, DEFAULT_MODEL } from "./claude";
+import { configFromEnv, claudePing, ClaudeError, DEFAULT_MODEL, isGateway } from "./claude";
 import { aiOperation, enqueueJob, readJob, runJob, usageReport } from "./ai-jobs";
 
 interface Env {
@@ -20,6 +20,7 @@ interface Env {
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_MODEL?: string;
   ANTHROPIC_FALLBACKS?: string;
+  ANTHROPIC_BASE_URL?: string;
   // Dispara a execução de um job de IA em background (produção). Ausente: execução síncrona.
   AI_DISPATCH?: (jobId: string, request: Request) => Promise<void>;
   IMAGES: {
@@ -195,7 +196,7 @@ const baseWorker = {
 
     if (authConfigured && !(await hasValidSession(request, env))) return url.pathname.startsWith('/api/') ? Response.json({error:'Sessão expirada. Entre novamente.'},{status:401,headers:{'Cache-Control':'no-store'}}) : loginPage();
     if(url.pathname === '/api/session') return Response.json({ok:true},{headers:{'Cache-Control':'no-store'}});
-    if(url.pathname === '/api/ai/status' && request.method === 'GET') return Response.json({configured:Boolean(env.ANTHROPIC_API_KEY),provider:'Anthropic (Claude)',model:env.ANTHROPIC_MODEL||DEFAULT_MODEL,fallbacks:env.ANTHROPIC_FALLBACKS!=='off',async:Boolean(env.AI_DISPATCH)},{headers:{'Cache-Control':'no-store'}});
+    if(url.pathname === '/api/ai/status' && request.method === 'GET') return Response.json({configured:Boolean(env.ANTHROPIC_API_KEY),provider:'Anthropic (Claude)',route:isGateway(env.ANTHROPIC_BASE_URL)?'Netlify AI Gateway (créditos Netlify)':'API Anthropic (chave própria)',model:env.ANTHROPIC_MODEL||DEFAULT_MODEL,fallbacks:configFromEnv(env).fallbacks,async:Boolean(env.AI_DISPATCH)},{headers:{'Cache-Control':'no-store'}});
     if(url.pathname === '/api/ai/usage' && request.method === 'GET') return Response.json(await usageReport(env.DB),{headers:{'Cache-Control':'no-store'}});
     if(url.pathname === '/api/ai/job' && request.method === 'GET'){const job=await readJob(env.DB,url.searchParams.get('id')||'');return job?Response.json(job,{headers:{'Cache-Control':'no-store'}}):Response.json({error:'Execução não encontrada.'},{status:404});}
     // Rotas de IA: em produção viram jobs em background (202 + id); sem despachante, executam direto.

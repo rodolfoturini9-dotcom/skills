@@ -107,3 +107,12 @@ test('worker: em produção as rotas de IA respondem 202 com job; sem chave, 503
   assert.equal((await worker.fetch(new Request(url+'/api/ai/job?id=x'),env,ctx)).status,401,'consulta de job exige sessão');
  }finally{await sql.close();}
 });
+
+test('Netlify AI Gateway: usa a URL injetada e desativa o fallback beta (cabeçalhos não repassados)',async()=>{
+ const {configFromEnv}=await import('../worker/claude.ts');
+ const gw=configFromEnv({ANTHROPIC_API_KEY:'k',ANTHROPIC_BASE_URL:'https://gateway.netlify.test/anthropic'});
+ assert.equal(gw.fallbacks,false);assert.equal(gw.baseURL,'https://gateway.netlify.test/anthropic');
+ assert.equal(configFromEnv({ANTHROPIC_API_KEY:'k'}).fallbacks,true);
+ const original=globalThis.fetch;let sent;globalThis.fetch=async(url,init)=>{sent={url:String(url),body:JSON.parse(init.body),beta:new Headers(init.headers).get('anthropic-beta')};return new Response('event: message_start\ndata: {"type":"message_start","message":{"id":"m","type":"message","role":"assistant","model":"claude-opus-5-5","content":[],"stop_reason":null,"usage":{"input_tokens":1,"output_tokens":0}}}\n\nevent: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}\n\nevent: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"{\\"a\\":\\"x\\"}"}}\n\nevent: content_block_stop\ndata: {"type":"content_block_stop","index":0}\n\nevent: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":3}}\n\nevent: message_stop\ndata: {"type":"message_stop"}\n\n',{headers:{'content-type':'text/event-stream'}});};
+ try{const r=await claudeJSON(gw,{system:'S',content:'C',schema});assert.deepEqual(r.value,{a:'x'});assert.match(sent.url,/^https:\/\/gateway\.netlify\.test\/anthropic\/v1\/messages/);assert.equal(sent.body.fallbacks,undefined);assert.equal(sent.beta,null);}finally{globalThis.fetch=original;}
+});

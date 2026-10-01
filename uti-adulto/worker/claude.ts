@@ -29,8 +29,12 @@ export class ClaudeError extends Error {
   constructor(message: string, readonly status = 502) { super(message); }
 }
 
-export function configFromEnv(env: {ANTHROPIC_API_KEY?: string; ANTHROPIC_MODEL?: string; ANTHROPIC_FALLBACKS?: string}): ClaudeConfig {
-  return {apiKey: env.ANTHROPIC_API_KEY || '', model: env.ANTHROPIC_MODEL || DEFAULT_MODEL, fallbacks: env.ANTHROPIC_FALLBACKS !== 'off'};
+// Netlify AI Gateway: injeta ANTHROPIC_API_KEY e ANTHROPIC_BASE_URL nas funções (cobrança em créditos Netlify).
+// O gateway não repassa cabeçalhos beta; nesse modo o fallback de recusa (beta) fica desativado.
+export function isGateway(baseURL?: string) { return !!baseURL && !/^https:\/\/api\.anthropic\.com\/?$/.test(baseURL); }
+export function configFromEnv(env: {ANTHROPIC_API_KEY?: string; ANTHROPIC_MODEL?: string; ANTHROPIC_FALLBACKS?: string; ANTHROPIC_BASE_URL?: string}): ClaudeConfig {
+  const baseURL = env.ANTHROPIC_BASE_URL || '';
+  return {apiKey: env.ANTHROPIC_API_KEY || '', model: env.ANTHROPIC_MODEL || DEFAULT_MODEL, baseURL: baseURL || undefined, fallbacks: env.ANTHROPIC_FALLBACKS !== 'off' && !isGateway(baseURL)};
 }
 
 // Structured outputs exige additionalProperties:false e não aceita limites numéricos/de tamanho.
@@ -63,7 +67,7 @@ export function imageBlock(dataUrl: string): Anthropic.Beta.BetaImageBlockParam 
 
 export function clientFor(config: ClaudeConfig) {
   if (!config.apiKey) throw new ClaudeError('IA não configurada: cadastre ANTHROPIC_API_KEY no Netlify.', 503);
-  // baseURL explícita: evita que uma variável ANTHROPIC_BASE_URL do ambiente desvie as chamadas.
+  // baseURL explícita (gateway ou API direta): nunca depende de variáveis implícitas do processo.
   return new Anthropic({apiKey: config.apiKey, baseURL: config.baseURL || 'https://api.anthropic.com', maxRetries: 2, timeout: 10 * 60 * 1000});
 }
 

@@ -35,8 +35,9 @@ export default function AIPanel() {
           <span className={`status-badge ${status?.configured ? 'occupied' : 'critical'}`}>{status ? (status.configured ? 'Configurada' : 'Não configurada') : 'Carregando'}</span></div>
         {status && <dl className="ai-facts">
           <div><dt>Modelo</dt><dd>{status.model}</dd></div>
+          <div><dt>Conexão</dt><dd>{status.route}</dd></div>
           <div><dt>Execução</dt><dd>{status.async ? 'Em background (até 15 min por geração)' : 'Direta (ambiente local)'}</dd></div>
-          <div><dt>Fallback em recusa</dt><dd>{status.fallbacks ? 'Ativo (servidor Anthropic)' : 'Desativado'}</dd></div>
+          <div><dt>Fallback em recusa</dt><dd>{status.fallbacks ? 'Ativo (servidor Anthropic)' : 'Indisponível nesta conexão'}</dd></div>
         </dl>}
         <div className="editor-actions"><button type="button" className="primary-btn" disabled={test.busy || !status?.configured} onClick={runTest}>Testar conexão</button><button type="button" className="secondary-btn" onClick={load}>Atualizar</button>{test.text && <span role="status">{test.text}</span>}</div>
         {status && !status.configured && <div className="inline-notice">
